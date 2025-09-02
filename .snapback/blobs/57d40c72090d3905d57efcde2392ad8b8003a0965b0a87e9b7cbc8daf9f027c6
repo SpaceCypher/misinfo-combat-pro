@@ -1,0 +1,6 @@
+var R=require("../../chunks/[turbopack]_runtime.js")("server/app/favicon.ico/route.js")
+R.c("server/chunks/c791b_next_2ca128fe._.js")
+R.c("server/chunks/[root-of-the-server]__6f565339._.js")
+R.m("[project]/Documents/misinfo-combat-pro/.next-internal/server/app/favicon.ico/route/actions.js [app-rsc] (server actions loader, ecmascript)")
+R.m("[project]/Documents/misinfo-combat-pro/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/Documents/misinfo-combat-pro/src/app/favicon--route-entry.js [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)")
+module.exports=R.m("[project]/Documents/misinfo-combat-pro/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/Documents/misinfo-combat-pro/src/app/favicon--route-entry.js [app-rsc] (ecmascript)\" } [app-rsc] (ecmascript)").exports

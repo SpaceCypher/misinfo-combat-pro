@@ -1,4 +1,3 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
 
 ## The 3 Core Features of MisInfo Combat Pro
 
@@ -78,21 +77,4 @@ User inputs WhatsApp forward claiming "PM announced 15% GDP growth" → System e
 - Cross-feature data sharing for personalized learning adaptation
 
 These three features create a complete ecosystem for combating misinformation - providing immediate detection, building user skills, and enabling independent verification capabilities.
-<span style="display:none">[^1][^2][^3][^4][^5][^6][^7]</span>
-
-<div style="text-align: center">⁂</div>
-
-[^1]: https://dl.acm.org/doi/fullHtml/10.1145/3544548.3581318
-
-[^2]: https://trilateralresearch.com/responsible-ai/using-responsible-ai-to-combat-misinformation
-
-[^3]: https://www.nowpublishers.com/article/DownloadSummary/ISY-037
-
-[^4]: https://onlinelibrary.wiley.com/doi/10.1002/aaai.12188
-
-[^5]: https://pmc.ncbi.nlm.nih.gov/articles/PMC12187399/
-
-[^6]: https://www.sciencedirect.com/science/article/pii/S2667325824000414
-
-[^7]: https://papers.ssrn.com/sol3/Delivery.cfm/SSRN_ID4580385_code6078027.pdf?abstractid=4580385\&mirid=1
 

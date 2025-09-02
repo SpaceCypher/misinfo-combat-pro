@@ -1,0 +1,4 @@
+{
+  "/api/test-gcp/route": "app/api/test-gcp/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js"
+}

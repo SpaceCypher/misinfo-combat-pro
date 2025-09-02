@@ -1,0 +1,30 @@
+# Google Cloud App Engine configuration
+runtime: nodejs20
+
+env_variables:
+  NODE_ENV: production
+  NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyALyYYmemnXknHVysvPBY1IypKERrFZTzY"
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "misinfo-combat-pro.firebaseapp.com"
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: "misinfo-combat-pro"
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "misinfo-combat-pro.firebasestorage.app"
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "487353774770"
+  NEXT_PUBLIC_FIREBASE_APP_ID: "1:487353774770:web:67b1fd0f426ffe19bd8fab"
+  NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: "G-WNNYHMP3T8"
+
+automatic_scaling:
+  min_instances: 1
+  max_instances: 10
+  target_cpu_utilization: 0.6
+
+handlers:
+  - url: /_next/static
+    static_dir: .next/static
+    secure: always
+    
+  - url: /.*
+    script: auto
+    secure: always
+
+# Security headers
+includes:
+  - security_headers.yaml

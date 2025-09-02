@@ -1,0 +1,10 @@
+(globalThis.TURBOPACK_CHUNK_LISTS || (globalThis.TURBOPACK_CHUNK_LISTS = [])).push({
+    script: typeof document === "object" ? document.currentScript : undefined,
+    chunks: [
+  "static/chunks/c791b_@firebase_auth_dist_esm_2b61473e._.js",
+  "static/chunks/c791b_@firebase_firestore_dist_index_esm_b85cc426.js",
+  "static/chunks/c791b_a06d3110._.js",
+  "static/chunks/Documents_misinfo-combat-pro_src_d3dfc730._.js"
+],
+    source: "dynamic"
+});

@@ -1,4 +1,3 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
 
 # do we add agents stuff also
 
@@ -66,29 +65,3 @@ Educational Response with Agent Reasoning
 **This positions you as building next-generation AI infrastructure, not just another detection tool.** Judges will immediately recognize the technical sophistication and alignment with Google's strategic direction.
 
 Add agents - it's your path to winning.
-<span style="display:none">[^10][^11][^5][^6][^7][^8][^9]</span>
-
-<div style="text-align: center">⁂</div>
-
-[^1]: https://timesofindia.indiatimes.com/technology/tech-news/google-cloud-sets-guinness-world-records-title-for-largest-ai-agent-training-event/articleshow/123043770.cms
-
-[^2]: https://blog.google/intl/en-in/company-news/seizing-our-moment-in-guinness-world-records/
-
-[^3]: https://arxiv.org/html/2505.17511v1
-
-[^4]: https://www.youtube.com/watch?v=zDoSNJyuxg0
-
-[^5]: https://www.cambridge.org/core/journals/data-and-policy/article/role-of-artificial-intelligence-in-disinformation/7C4BF6CA35184F149143DE968FC4C3B6
-
-[^6]: https://pmc.ncbi.nlm.nih.gov/articles/PMC9628472/
-
-[^7]: https://www.weforum.org/stories/2024/06/ai-combat-online-misinformation-disinformation/
-
-[^8]: https://www.ibm.com/think/insights/ai-misinformation
-
-[^9]: https://arxiv.org/html/2310.07545v2
-
-[^10]: https://www.sciencedirect.com/science/article/abs/pii/B9780128186992000044
-
-[^11]: https://www.glean.com/blog/guide-genai-agents-2024
-
