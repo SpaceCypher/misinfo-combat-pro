@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "ignorePatterns": [
+    ".snapback",
+    "node_modules",
+    ".git",
+    "__pycache__",
+    ".DS_Store",
+    "*.log",
+    ".env",
+    ".env.local",
+    ".env.*.local",
+    "dist",
+    "build",
+    ".cache",
+    ".tmp",
+    ".temp"
+  ]
+}

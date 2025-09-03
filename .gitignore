@@ -45,4 +45,3 @@ next-env.d.ts
 
 # Google Cloud credentials
 secrets/
-*.json
