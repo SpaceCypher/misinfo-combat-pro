@@ -57,17 +57,19 @@ export default function Home() {
                                         Dashboard
                                     </Link>
                                     <div className="flex items-center space-x-2">
-                                        {user.photoURL ? (
-                                            <img
-                                                src={user.photoURL}
-                                                alt="Profile"
-                                                className="w-8 h-8 rounded-full"
-                                            />
-                                        ) : (
-                                            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                                <User className="w-4 h-4 text-gray-600" />
-                                            </div>
-                                        )}
+                                        <Link href="/profile" className="hover:opacity-80 transition-opacity">
+                                            {user.photoURL ? (
+                                                <img
+                                                    src={user.photoURL}
+                                                    alt="Profile"
+                                                    className="w-8 h-8 rounded-full"
+                                                />
+                                            ) : (
+                                                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                                                    <User className="w-4 h-4 text-gray-600" />
+                                                </div>
+                                            )}
+                                        </Link>
                                         <Link href="/profile" className="text-gray-600 hover:text-gray-900 transition-colors">
                                             {user.displayName || user.email}
                                         </Link>
@@ -129,17 +131,19 @@ export default function Home() {
                                             Dashboard
                                         </Link>
                                         <div className="flex items-center space-x-2 py-2">
-                                            {user.photoURL ? (
-                                                <img
-                                                    src={user.photoURL}
-                                                    alt="Profile"
-                                                    className="w-8 h-8 rounded-full"
-                                                />
-                                            ) : (
-                                                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                                    <User className="w-4 h-4 text-gray-600" />
-                                                </div>
-                                            )}
+                                            <Link href="/profile" className="hover:opacity-80 transition-opacity">
+                                                {user.photoURL ? (
+                                                    <img
+                                                        src={user.photoURL}
+                                                        alt="Profile"
+                                                        className="w-8 h-8 rounded-full"
+                                                    />
+                                                ) : (
+                                                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                                                        <User className="w-4 h-4 text-gray-600" />
+                                                    </div>
+                                                )}
+                                            </Link>
                                             <Link href="/profile" className="text-gray-600 hover:text-gray-900 transition-colors">
                                                 {user.displayName || user.email}
                                             </Link>
