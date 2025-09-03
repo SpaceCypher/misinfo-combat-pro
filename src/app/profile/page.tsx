@@ -9,13 +9,28 @@ import {
   Shield, User, Mail, Calendar, ArrowLeft, Edit,
   BarChart3, Target, Clock, Award, Bell, Globe,
   Lock, Eye, Download, FileText, Image, Video,
-  ChevronRight, Settings
+  ChevronRight, Settings, X, Save, Camera
 } from 'lucide-react';
 
 function ProfileContent() {
   const router = useRouter();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    displayName: user?.displayName || 'Sanidhya Kumar',
+    bio: 'Student & Fact Checker',
+    location: 'Mumbai, India',
+    website: '',
+    twitter: '',
+    linkedin: '',
+    emailNotifications: true,
+    weeklyReports: true,
+    smsAlerts: false,
+    publicProfile: true,
+    shareAchievements: false,
+    language: 'English'
+  });
 
   if (!user) {
     return null;
@@ -44,8 +59,22 @@ function ProfileContent() {
     { name: 'Accuracy Expert', icon: '⭐', earned: false }
   ];
 
+  const handleEditFormChange = (field: string, value: string | boolean) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSaveProfile = () => {
+    // Here you would typically save to your backend/Firebase
+    console.log('Saving profile:', editForm);
+    setIsEditPanelOpen(false);
+    // You could show a success toast here
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -98,7 +127,10 @@ function ProfileContent() {
                     </p>
                   </div>
                 </div>
-                <button className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 flex-shrink-0">
+                <button 
+                  onClick={() => setIsEditPanelOpen(true)}
+                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 flex-shrink-0 transition-colors"
+                >
                   <Edit className="w-4 h-4" />
                   <span className="hidden sm:inline">Edit Profile</span>
                 </button>
@@ -246,7 +278,10 @@ function ProfileContent() {
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-2">
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Profile Information</h2>
-                  <button className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 self-start sm:self-auto">
+                  <button 
+                    onClick={() => setIsEditPanelOpen(true)}
+                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 self-start sm:self-auto transition-colors"
+                  >
                     <Edit className="w-4 h-4" />
                     <span className="hidden sm:inline">Edit Profile</span>
                   </button>
@@ -360,15 +395,14 @@ function ProfileContent() {
                     </label>
                   </div>
                 </div>
-
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">Language</h4>
-                  <select className="w-full p-2 border border-gray-300 rounded-lg">
-                    <option>English</option>
-                    <option>Hindi</option>
-                    <option>Spanish</option>
-                  </select>
-                </div>
+  <h4 className="text-sm font-medium text-gray-700 mb-3">Language</h4>
+  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent !text-black !bg-white">
+    <option>English</option>
+    <option>Hindi</option>
+  </select>
+</div>
+
 
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-3">Privacy</h4>
@@ -423,6 +457,216 @@ function ProfileContent() {
           </div>
         </div>
       </main>
+
+      {/* Edit Profile Slide-out Panel */}
+      {isEditPanelOpen && (
+        <>
+          {/* Overlay */}
+          <div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-all duration-300"
+            onClick={() => setIsEditPanelOpen(false)}
+          />
+          
+          {/* Slide-out Panel */}
+          <div className="fixed right-4 top-4 bottom-4 w-full max-w-md bg-white rounded-xl shadow-2xl z-50 transform transition-transform duration-300 ease-in-out overflow-hidden flex flex-col">
+            {/* Panel Header */}
+            <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-xl">
+              <h2 className="text-xl font-semibold text-gray-900">Edit Profile</h2>
+              <button
+                onClick={() => setIsEditPanelOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Panel Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Profile Photo Section */}
+              <div className="text-center">
+                <div className="relative inline-block">
+                  <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <User className="w-12 h-12 text-gray-400" />
+                  </div>
+                  <button className="absolute bottom-4 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors">
+                    <Camera className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600">Click to change profile photo</p>
+              </div>
+
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900">Basic Information</h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
+                  <input
+                    type="text"
+                    value={editForm.displayName}
+                    onChange={(e) => handleEditFormChange('displayName', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="Enter your display name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                  <textarea
+                    value={editForm.bio}
+                    onChange={(e) => handleEditFormChange('bio', e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 bg-white"
+                    placeholder="Tell us about yourself"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                  <input
+                    type="text"
+                    value={editForm.location}
+                    onChange={(e) => handleEditFormChange('location', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="City, Country"
+                  />
+                </div>
+              </div>
+
+              {/* Social Links */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900">Social Links</h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                  <input
+                    type="url"
+                    value={editForm.website}
+                    onChange={(e) => handleEditFormChange('website', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="https://yourwebsite.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Twitter</label>
+                  <input
+                    type="text"
+                    value={editForm.twitter}
+                    onChange={(e) => handleEditFormChange('twitter', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="@username"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">LinkedIn</label>
+                  <input
+                    type="text"
+                    value={editForm.linkedin}
+                    onChange={(e) => handleEditFormChange('linkedin', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="linkedin.com/in/username"
+                  />
+                </div>
+              </div>
+
+              {/* Preferences */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900">Preferences</h3>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Language</label>
+                  <select 
+                    value={editForm.language}
+                    onChange={(e) => handleEditFormChange('language', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="English">English</option>
+                    <option value="Hindi">Hindi</option>
+                    <option value="Spanish">Spanish</option>
+                  </select>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">Notifications</h4>
+                  
+                  <label className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={editForm.emailNotifications}
+                      onChange={(e) => handleEditFormChange('emailNotifications', e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                    />
+                    <span className="ml-2 text-sm text-gray-600">Email notifications</span>
+                  </label>
+                  
+                  <label className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={editForm.weeklyReports}
+                      onChange={(e) => handleEditFormChange('weeklyReports', e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                    />
+                    <span className="ml-2 text-sm text-gray-600">Weekly reports</span>
+                  </label>
+                  
+                  <label className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={editForm.smsAlerts}
+                      onChange={(e) => handleEditFormChange('smsAlerts', e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                    />
+                    <span className="ml-2 text-sm text-gray-600">SMS alerts</span>
+                  </label>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">Privacy</h4>
+                  
+                  <label className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={editForm.publicProfile}
+                      onChange={(e) => handleEditFormChange('publicProfile', e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                    />
+                    <span className="ml-2 text-sm text-gray-600">Public profile</span>
+                  </label>
+                  
+                  <label className="flex items-center">
+                    <input 
+                      type="checkbox" 
+                      checked={editForm.shareAchievements}
+                      onChange={(e) => handleEditFormChange('shareAchievements', e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                    />
+                    <span className="ml-2 text-sm text-gray-600">Share achievements</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Panel Footer */}
+            <div className="flex-shrink-0 bg-white border-t border-gray-200 px-6 py-4 flex space-x-3 rounded-b-xl">
+              <button
+                onClick={() => setIsEditPanelOpen(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveProfile}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save Changes</span>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
