@@ -33,15 +33,3 @@ select {
 select option {
   color: #000000 !important;
 }
-/* In your globals.css */
-.text-gray-600 {
-  color: #4b5563 !important;
-}
-
-.text-gray-900 {
-  color: #111827 !important;
-}
-
-.font-semibold {
-  color: #000000 !important;
-}

@@ -196,7 +196,7 @@ function DashboardContent() {
                 <input
                   type="text"
                   placeholder="Search content, articles, or training modules..."
-                  className="pl-10 pr-4 py-2 w-64 lg:w-96 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="pl-10 pr-4 py-2 w-64 lg:w-96 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
                 />
               </div>
             </div>
@@ -310,7 +310,7 @@ function DashboardContent() {
                           <input
                             type="text"
                             placeholder="Paste URL or text to verify..."
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors placeholder-gray-500"
                             onClick={(e) => e.preventDefault()}
                           />
                         </div>
@@ -488,21 +488,21 @@ function DashboardContent() {
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">This Week</h2>
                   <div className="space-y-4">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600">Analyses completed</span>
-                      <span className="font-semibold">23</span>
+                      <span className="font-semibold text-gray-900">23</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600">Training time</span>
-                      <span className="font-semibold">2h 45m</span>
+                      <span className="font-semibold text-gray-900">2h 45m</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600">Claims verified</span>
-                      <span className="font-semibold">67</span>
+                      <span className="font-semibold text-gray-900">67</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-gray-600">Community rank</span>
-                      <span className="font-semibold">#142</span>
+                      <span className="font-semibold text-gray-900">#142</span>
                     </div>
                   </div>
                 </div>

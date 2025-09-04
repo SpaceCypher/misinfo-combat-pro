@@ -344,7 +344,7 @@ export default function Home() {
                     </p>
                     <Link
                         href={user ? "/dashboard" : "/auth/signup"}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors inline-block"
+                        className="bg-blue-600 hover:bg-blue-700 text-white py-4 px-8 rounded-lg text-lg transition-colors inline-block"
                     >
                         {user ? "Go to Dashboard" : "Get Started Free"}
                     </Link>
@@ -368,7 +368,7 @@ export default function Home() {
                         </div>
 
                         <div>
-                            <h3 className="text-white font-semibold mb-4">Features</h3>
+                            <h3 className="text-white mb-4">Features</h3>
                             <ul className="space-y-2 text-gray-400">
                                 <li><Link href="/analyzer" className="hover:text-white transition-colors">Smart Analyzer</Link></li>
                                 <li><Link href="/training" className="hover:text-white transition-colors">Interactive Trainer</Link></li>
@@ -377,7 +377,7 @@ export default function Home() {
                         </div>
 
                         <div>
-                            <h3 className="text-white font-semibold mb-4">Company</h3>
+                            <h3 className="text-white mb-4">Company</h3>
                             <ul className="space-y-2 text-gray-400">
                                 <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
                                 <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
@@ -386,7 +386,7 @@ export default function Home() {
                         </div>
 
                         <div>
-                            <h3 className="text-white font-semibold mb-4">Support</h3>
+                            <h3 className="text-white mb-4">Support</h3>
                             <ul className="space-y-2 text-gray-400">
                                 <li><Link href="/help" className="hover:text-white transition-colors">Help Center</Link></li>
                                 <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
