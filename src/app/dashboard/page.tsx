@@ -196,7 +196,7 @@ function DashboardContent() {
                 <input
                   type="text"
                   placeholder="Search content, articles, or training modules..."
-                  className="pl-10 pr-4 py-2 w-64 lg:w-96 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500"
+                  className="pl-10 pr-4 py-2 w-64 lg:w-96 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-600 text-gray-900"
                 />
               </div>
             </div>
@@ -310,7 +310,7 @@ function DashboardContent() {
                           <input
                             type="text"
                             placeholder="Paste URL or text to verify..."
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors placeholder-gray-500"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors placeholder-gray-600 text-gray-900"
                             onClick={(e) => e.preventDefault()}
                           />
                         </div>

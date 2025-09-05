@@ -238,7 +238,7 @@ export default function Analyzer() {
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="https://example.com/article"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-600"
               />
               <p className="text-gray-600">
                 We'll analyze the content from the webpage, including text, images, and metadata.
@@ -257,7 +257,7 @@ export default function Analyzer() {
                 onChange={(e) => setTextInput(e.target.value)}
                 placeholder="Paste the text content you want to analyze for misinformation patterns..."
                 rows={8}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-600"
               />
               <p className="text-gray-600">
                 Our AI will analyze the text for emotional manipulation, false statistics, and other misinformation patterns.
@@ -307,7 +307,7 @@ export default function Analyzer() {
                 ) : (
                   <AlertTriangle className="w-6 h-6 text-red-600" />
                 )}
-                <span className="text-lg font-semibold">{analysisResult.summary_title}</span>
+                <span className="text-lg font-semibold text-gray-900">{analysisResult.summary_title}</span>
               </div>
             </div>
 
