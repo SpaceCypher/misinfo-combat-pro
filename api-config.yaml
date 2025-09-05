@@ -1,0 +1,25 @@
+swagger: '2.0'
+info:
+  title: MisInfo Combat Pro API
+  version: 1.0.0
+schemes:
+  - https
+produces:
+  - application/json
+securityDefinitions: {}
+security: []
+paths:
+  /analyze:
+    post:
+      summary: Analyzes content for misinformation
+      operationId: analyzeContent
+      security: []
+      x-google-backend:
+        address: https://workflowexecutions.googleapis.com/v1/projects/optical-habitat-470918-f2/locations/asia-south1/workflows/misinfo-analyzer-workflow/executions
+        protocol: h2
+        disable_auth: true
+      responses:
+        '200':
+          description: A successful response
+          schema:
+            type: object
