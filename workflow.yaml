@@ -1,0 +1,36 @@
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - text_content: ${args.body.text} # Assumes the initial request has {"text": "..."}
+    - call_classifier:
+        call: http.post
+        args:
+          url: https://asia-south1-optical-habitat-470918-f2.cloudfunctions.net/classifier-agent
+          auth:
+            type: OIDC
+          body:
+            text: ${text_content}
+        result: classification_result
+    - call_evidence_agent:
+        call: http.post
+        args:
+          url: https://asia-south1-optical-habitat-470918-f2.cloudfunctions.net/evidence-agent
+          auth:
+            type: OIDC
+          body:
+            claims: ${classification_result.body.claims}
+        result: evidence_result
+    - call_explanation_agent:
+        call: http.post
+        args:
+          url: https://asia-south1-optical-habitat-470918-f2.cloudfunctions.net/explanation-agent
+          auth:
+            type: OIDC
+          body:
+            classification_result: ${classification_result.body}
+            evidence_report: ${evidence_result.body}
+        result: final_report
+    - return_result:
+        return: ${final_report.body}

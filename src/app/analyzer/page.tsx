@@ -2,14 +2,21 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Shield, Upload, FileText, Image, Video, Link as LinkIcon, ArrowLeft } from 'lucide-react';
+import { Shield, Upload, FileText, Image, Video, Link as LinkIcon, ArrowLeft, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 
 export default function Analyzer() {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [urlInput, setUrlInput] = useState('');
   const [textInput, setTextInput] = useState('');
-  const [activeTab, setActiveTab] = useState<'upload' | 'url' | 'text'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'url' | 'text'>('text');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<{
+    risk_score: number;
+    summary_title: string;
+    explanation_html: string;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -37,9 +44,45 @@ export default function Analyzer() {
     }
   };
 
-  const handleAnalyze = () => {
-    // TODO: Implement analysis logic
-    console.log('Analyzing content...');
+  const handleAnalyze = async () => {
+    if (!textInput.trim() && !urlInput.trim() && !selectedFile) {
+      setError('Please enter text, URL, or upload a file to analyze.');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setError(null);
+    setAnalysisResult(null);
+
+    try {
+      // For now, we'll only handle text analysis since that's what we deployed
+      if (activeTab === 'text' && textInput.trim()) {
+        const response = await fetch('https://us-central1-optical-habitat-470918-f2.cloudfunctions.net/misinfo-proxy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: textInput.trim()
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Analysis failed: ${response.status}`);
+        }
+
+        const result = await response.json();
+        setAnalysisResult(result);
+      } else {
+        // Placeholder for URL and file upload functionality
+        setError('URL and file upload analysis will be available soon. Please use text analysis for now.');
+      }
+    } catch (err) {
+      console.error('Analysis error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred during analysis.');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -226,13 +269,103 @@ export default function Analyzer() {
           <div className="mt-8 text-center">
             <button
               onClick={handleAnalyze}
-              disabled={!selectedFile && !urlInput.trim() && !textInput.trim()}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-8 rounded-lg transition-colors"
+              disabled={(!selectedFile && !urlInput.trim() && !textInput.trim()) || isAnalyzing}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-8 rounded-lg transition-colors flex items-center justify-center mx-auto"
             >
-              Analyze Content
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                'Analyze Content'
+              )}
             </button>
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
+              <p className="text-red-800">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Analysis Results */}
+        {analysisResult && (
+          <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Analysis Results</h2>
+              <div className="flex items-center justify-center space-x-2">
+                {analysisResult.risk_score <= 30 ? (
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                ) : analysisResult.risk_score <= 70 ? (
+                  <AlertTriangle className="w-6 h-6 text-yellow-600" />
+                ) : (
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                )}
+                <span className="text-lg font-semibold">{analysisResult.summary_title}</span>
+              </div>
+            </div>
+
+            {/* Risk Score */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-gray-700">Risk Score</span>
+                <span className="text-sm font-medium text-gray-700">{analysisResult.risk_score}/100</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div 
+                  className={`h-3 rounded-full transition-all duration-500 ${
+                    analysisResult.risk_score <= 30 
+                      ? 'bg-green-500' 
+                      : analysisResult.risk_score <= 70 
+                      ? 'bg-yellow-500' 
+                      : 'bg-red-500'
+                  }`}
+                  style={{ width: `${analysisResult.risk_score}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Detailed Explanation */}
+            <div className="prose max-w-none">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Detailed Analysis</h3>
+              <div 
+                className="text-gray-700 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: analysisResult.explanation_html }}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => {
+                  setAnalysisResult(null);
+                  setTextInput('');
+                  setUrlInput('');
+                  setSelectedFile(null);
+                  setError(null);
+                }}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+              >
+                Analyze Another
+              </button>
+              <button
+                onClick={() => {
+                  const resultText = `Analysis Result:\nRisk Score: ${analysisResult.risk_score}/100\nSummary: ${analysisResult.summary_title}\n\nDetailed Analysis:\n${analysisResult.explanation_html.replace(/<[^>]*>/g, '')}`;
+                  navigator.clipboard.writeText(resultText);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+              >
+                Copy Results
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Feature Highlights */}
         <div className="mt-12 grid md:grid-cols-3 gap-6">
