@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove standalone output for Vercel deployment
+  // Disable output file tracing to avoid permission issues
+  output: 'standalone',
+  outputFileTracing: false,
   
   // Fix workspace root detection
   outputFileTracingRoot: __dirname,
