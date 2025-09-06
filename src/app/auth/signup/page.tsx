@@ -126,7 +126,7 @@ function SignUpContent() {
                   required
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="pl-10 w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                  className="pl-10 w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-600"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -146,7 +146,7 @@ function SignUpContent() {
                   required
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="pl-10 w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                  className="pl-10 w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-600"
                   placeholder="Enter your email"
                 />
               </div>
@@ -166,7 +166,7 @@ function SignUpContent() {
                   required
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="pl-10 pr-10 w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                  className="pl-10 pr-10 w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-600"
                   placeholder="Create a password"
                 />
                 <button
@@ -193,7 +193,7 @@ function SignUpContent() {
                   required
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className="pl-10 pr-10 w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                  className="pl-10 pr-10 w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-600"
                   placeholder="Confirm your password"
                 />
                 <button

@@ -505,7 +505,7 @@ function ProfileContent() {
                     type="text"
                     value={editForm.displayName}
                     onChange={(e) => handleEditFormChange('displayName', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-600"
                     placeholder="Enter your display name"
                   />
                 </div>
@@ -516,7 +516,7 @@ function ProfileContent() {
                     value={editForm.bio}
                     onChange={(e) => handleEditFormChange('bio', e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 bg-white placeholder-gray-600"
                     placeholder="Tell us about yourself"
                   />
                 </div>
@@ -527,7 +527,7 @@ function ProfileContent() {
                     type="text"
                     value={editForm.location}
                     onChange={(e) => handleEditFormChange('location', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-600"
                     placeholder="City, Country"
                   />
                 </div>
@@ -543,7 +543,7 @@ function ProfileContent() {
                     type="url"
                     value={editForm.website}
                     onChange={(e) => handleEditFormChange('website', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-600"
                     placeholder="https://yourwebsite.com"
                   />
                 </div>
@@ -554,7 +554,7 @@ function ProfileContent() {
                     type="text"
                     value={editForm.twitter}
                     onChange={(e) => handleEditFormChange('twitter', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-600"
                     placeholder="@username"
                   />
                 </div>
@@ -565,7 +565,7 @@ function ProfileContent() {
                     type="text"
                     value={editForm.linkedin}
                     onChange={(e) => handleEditFormChange('linkedin', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-600"
                     placeholder="linkedin.com/in/username"
                   />
                 </div>

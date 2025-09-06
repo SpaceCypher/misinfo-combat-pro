@@ -238,7 +238,7 @@ export default function Analyzer() {
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 placeholder="https://example.com/article"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-600"
               />
               <p className="text-gray-600">
                 We'll analyze the content from the webpage, including text, images, and metadata.
@@ -257,7 +257,7 @@ export default function Analyzer() {
                 onChange={(e) => setTextInput(e.target.value)}
                 placeholder="Paste the text content you want to analyze for misinformation patterns..."
                 rows={8}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-600"
               />
               <p className="text-gray-600">
                 Our AI will analyze the text for emotional manipulation, false statistics, and other misinformation patterns.
@@ -283,89 +283,6 @@ export default function Analyzer() {
             </button>
           </div>
         </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
-              <p className="text-red-800">{error}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Analysis Results */}
-        {analysisResult && (
-          <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Analysis Results</h2>
-              <div className="flex items-center justify-center space-x-2">
-                {analysisResult.risk_score <= 30 ? (
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                ) : analysisResult.risk_score <= 70 ? (
-                  <AlertTriangle className="w-6 h-6 text-yellow-600" />
-                ) : (
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
-                )}
-                <span className="text-lg font-semibold">{analysisResult.summary_title}</span>
-              </div>
-            </div>
-
-            {/* Risk Score */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700">Risk Score</span>
-                <span className="text-sm font-medium text-gray-700">{analysisResult.risk_score}/100</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className={`h-3 rounded-full transition-all duration-500 ${
-                    analysisResult.risk_score <= 30 
-                      ? 'bg-green-500' 
-                      : analysisResult.risk_score <= 70 
-                      ? 'bg-yellow-500' 
-                      : 'bg-red-500'
-                  }`}
-                  style={{ width: `${analysisResult.risk_score}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Detailed Explanation */}
-            <div className="prose max-w-none">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Detailed Analysis</h3>
-              <div 
-                className="text-gray-700 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: analysisResult.explanation_html }}
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={() => {
-                  setAnalysisResult(null);
-                  setTextInput('');
-                  setUrlInput('');
-                  setSelectedFile(null);
-                  setError(null);
-                }}
-                className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
-              >
-                Analyze Another
-              </button>
-              <button
-                onClick={() => {
-                  const resultText = `Analysis Result:\nRisk Score: ${analysisResult.risk_score}/100\nSummary: ${analysisResult.summary_title}\n\nDetailed Analysis:\n${analysisResult.explanation_html.replace(/<[^>]*>/g, '')}`;
-                  navigator.clipboard.writeText(resultText);
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
-              >
-                Copy Results
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Feature Highlights */}
         <div className="mt-12 grid md:grid-cols-3 gap-6">
