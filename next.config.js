@@ -1,9 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable output file tracing to avoid permission issues
-  output: 'standalone',
-  outputFileTracing: false,
-  
   // Fix workspace root detection
   outputFileTracingRoot: __dirname,
   

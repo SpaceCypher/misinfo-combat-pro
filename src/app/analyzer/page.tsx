@@ -67,11 +67,17 @@ export default function Analyzer() {
           }),
         });
 
+        const result = await response.json();
+        
         if (!response.ok) {
-          throw new Error(`Analysis failed: ${response.status}`);
+          if (response.status === 429) {
+            setError('Service is temporarily busy due to high demand. Please try again in a few minutes.');
+          } else {
+            throw new Error(`Analysis failed: ${response.status} - ${result.error || 'Unknown error'}`);
+          }
+          return;
         }
 
-        const result = await response.json();
         setAnalysisResult(result);
       } else {
         // Placeholder for URL and file upload functionality
@@ -314,6 +320,168 @@ export default function Analyzer() {
             </p>
           </div>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="mt-8 bg-red-50 border border-red-200 rounded-lg p-6">
+            <div className="flex items-center">
+              <AlertTriangle className="w-6 h-6 text-red-600 mr-3" />
+              <div>
+                <h3 className="text-lg font-semibold text-red-900">Analysis Error</h3>
+                <p className="text-red-700 mt-1">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Analysis Results */}
+        {analysisResult && (
+          <div className="mt-8 bg-white border border-gray-200 rounded-2xl shadow-lg p-8 relative overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full transform translate-x-16 -translate-y-16 opacity-60"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-green-50 to-blue-50 rounded-full transform -translate-x-12 translate-y-12 opacity-60"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center mb-8">
+                <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl mr-4 shadow-lg">
+                  <CheckCircle className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">Analysis Complete</h2>
+                  <p className="text-gray-600 mt-1">Your content has been thoroughly analyzed</p>
+                </div>
+              </div>
+
+            <div className="space-y-8">
+              {/* Risk Score */}
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                  Risk Assessment
+                </h3>
+                
+                {/* Score Display */}
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                  <div className="flex items-center space-x-6 mb-4 lg:mb-0">
+                    <div className="relative">
+                      <div className={`w-24 h-24 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg ${
+                        analysisResult.risk_score <= 30 
+                          ? 'bg-gradient-to-br from-green-400 to-green-600' 
+                          : analysisResult.risk_score <= 70 
+                          ? 'bg-gradient-to-br from-yellow-400 to-yellow-600'
+                          : 'bg-gradient-to-br from-red-400 to-red-600'
+                      }`}>
+                        {analysisResult.risk_score}
+                      </div>
+                      <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+                        <span className="bg-white text-gray-600 text-xs font-medium px-2 py-1 rounded-full shadow border">
+                          /100
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className={`inline-flex px-4 py-2 rounded-lg text-base font-semibold shadow-sm ${
+                        analysisResult.risk_score <= 30 
+                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                          : analysisResult.risk_score <= 70 
+                          ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                          : 'bg-red-100 text-red-800 border border-red-200'
+                      }`}>
+                        {analysisResult.summary_title}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {analysisResult.risk_score <= 30 
+                          ? 'Low risk of misinformation' 
+                          : analysisResult.risk_score <= 70 
+                          ? 'Moderate risk detected'
+                          : 'High risk of misinformation'
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Risk Level</span>
+                    <span className="font-medium">{analysisResult.risk_score}% Risk Score</span>
+                  </div>
+                  <div className="relative">
+                    <div className="w-full bg-gray-300 rounded-full h-4 shadow-inner">
+                      <div 
+                        className={`h-4 rounded-full transition-all duration-1000 ease-out shadow-sm ${
+                          analysisResult.risk_score <= 30 
+                            ? 'bg-gradient-to-r from-green-400 to-green-500' 
+                            : analysisResult.risk_score <= 70 
+                            ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' 
+                            : 'bg-gradient-to-r from-red-400 to-red-500'
+                        }`}
+                        style={{ width: `${Math.max(analysisResult.risk_score, 8)}%` }}
+                      ></div>
+                    </div>
+                    {/* Risk level markers */}
+                    <div className="flex justify-between mt-2 text-xs text-gray-500">
+                      <span className="flex flex-col items-center">
+                        <div className="w-1 h-2 bg-green-400 rounded-full mb-1"></div>
+                        Low
+                      </span>
+                      <span className="flex flex-col items-center">
+                        <div className="w-1 h-2 bg-yellow-400 rounded-full mb-1"></div>
+                        Medium
+                      </span>
+                      <span className="flex flex-col items-center">
+                        <div className="w-1 h-2 bg-red-400 rounded-full mb-1"></div>
+                        High
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Analysis */}
+              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                  <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                  Detailed Analysis
+                </h3>
+                <div className="bg-gray-50 rounded-lg p-6 border border-gray-100">
+                  <div 
+                    className="text-gray-700 leading-relaxed prose max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-p:mb-4 prose-ul:my-4 prose-li:mb-2"
+                    dangerouslySetInnerHTML={{ __html: analysisResult.explanation_html }}
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+                <button
+                  onClick={() => {
+                    setAnalysisResult(null);
+                    setTextInput('');
+                    setUrlInput('');
+                    setSelectedFile(null);
+                    setError(null);
+                  }}
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                >
+                  Analyze Another
+                </button>
+                <button
+                  onClick={() => {
+                    const resultText = `Analysis Result:\nRisk Score: ${analysisResult.risk_score}/100\nSummary: ${analysisResult.summary_title}\n\nDetailed Analysis:\n${analysisResult.explanation_html.replace(/<[^>]*>/g, '')}`;
+                    navigator.clipboard.writeText(resultText);
+                  }}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                >
+                  Copy Results
+                </button>
+              </div>
+            </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
