@@ -93,7 +93,7 @@ export default function Analyzer() {
         return;
       }
 
-      const response = await fetch('https://us-central1-optical-habitat-470918-f2.cloudfunctions.net/pure-proxy', {
+      const response = await fetch('https://us-central1-optical-habitat-470918-f2.cloudfunctions.net/misinfo-proxy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
