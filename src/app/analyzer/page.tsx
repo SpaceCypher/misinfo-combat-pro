@@ -1,10 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import NextImage from 'next/image';
 import { Shield, Upload, FileText, Image, Video, Link as LinkIcon, ArrowLeft, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
+import { useAuth } from '@/lib/simple-auth-context';
+import { saveAnalysis } from '@/lib/analysis-service';
 
 export default function Analyzer() {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const [imageError, setImageError] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const analysisResultRef = useRef<HTMLDivElement>(null);
+  
+  // Reset image error when user changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.photoURL]);
+  
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [urlInput, setUrlInput] = useState('');
@@ -23,6 +38,18 @@ export default function Analyzer() {
     }>;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-scroll to results when analysis completes
+  useEffect(() => {
+    if (analysisResult && analysisResultRef.current) {
+      setTimeout(() => {
+        analysisResultRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
+    }
+  }, [analysisResult]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -113,6 +140,39 @@ export default function Analyzer() {
       }
 
       setAnalysisResult(result);
+      
+      // Save to analysis history in Firestore
+      if (user?.uid) {
+        try {
+          // Map activeTab to proper type
+          const getContentType = (): 'text' | 'image' | 'video' | 'url' => {
+            if (activeTab === 'upload') {
+              if (selectedFile?.type.startsWith('image/')) return 'image';
+              if (selectedFile?.type.startsWith('video/')) return 'video';
+              return 'text'; // fallback for other file types
+            }
+            return activeTab as 'text' | 'url';
+          };
+
+          const historyItem = {
+            userId: user.uid,
+            type: getContentType(),
+            content: activeTab === 'text' ? textInput : 
+                    activeTab === 'url' ? urlInput : 
+                    selectedFile?.name || 'Unknown file',
+            score: result.risk_score,
+            explanation: result.explanation_html?.replace(/<[^>]*>/g, '') || result.summary_title || 'Analysis completed',
+            recommendations: 'Please verify this information from reliable sources before sharing.',
+            sources: Array.isArray(result.sources) ? result.sources.map((s: any) => typeof s === 'string' ? s : s.link || s.title || 'Unknown source') : []
+          };
+          
+          await saveAnalysis(historyItem);
+          console.log('Analysis saved to Firestore successfully');
+        } catch (error) {
+          console.error('Failed to save analysis to Firestore:', error);
+          // Continue execution even if save fails
+        }
+      }
     } catch (err) {
       console.error('Analysis error:', err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred during analysis.');
@@ -127,25 +187,122 @@ export default function Analyzer() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 transition-colors">
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Dashboard</span>
-              </Link>
-              <div className="w-px h-6 bg-gray-300"></div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-gray-900">Smart Analyzer</span>
+            {/* Left side - Logo/Brand */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
+                <Shield className="w-5 h-5 text-white" />
               </div>
+              <h1 className="text-xl font-bold text-gray-900">MisInfo Combat Pro</h1>
+            </div>
+
+            {/* Center - Navigation */}
+            <nav className="flex items-center space-x-8">
+              <Link
+                href="/dashboard"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/training"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Training
+              </Link>
+              <Link
+                href="/analyzer"
+                className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1"
+                aria-current="page"
+              >
+                Analyze
+              </Link>
+              <Link
+                href="/verifier"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Verify
+              </Link>
+            </nav>
+
+            {/* Right side - Profile */}
+            <div className="relative">
+              <div 
+                className="flex items-center space-x-3 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors cursor-pointer"
+                onMouseEnter={() => setShowProfileDropdown(true)}
+                onMouseLeave={() => setShowProfileDropdown(false)}
+              >
+                <div className="flex flex-col items-end">
+                  <span className="text-sm font-medium text-gray-900">
+                    {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                  </span>
+                  <span className="text-xs text-gray-500">Level 3</span>
+                </div>
+                <div className="w-8 h-8 rounded-full overflow-hidden">
+                  {user?.photoURL && !imageError ? (
+                    <img 
+                      src={`/api/proxy-image?url=${encodeURIComponent(user.photoURL)}`}
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.log('Proxy image failed, trying direct URL:', user?.photoURL);
+                        e.currentTarget.src = user?.photoURL || '';
+                        e.currentTarget.onerror = () => {
+                          console.log('Direct URL also failed');
+                          setImageError(true);
+                        };
+                      }}
+                      onLoad={() => console.log('Image loaded successfully via proxy')}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">
+                        {user?.displayName ? 
+                          user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 
+                          user?.email?.[0]?.toUpperCase() || 'U'
+                        }
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Profile Dropdown */}
+              {showProfileDropdown && (
+                <div 
+                  className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                  onMouseEnter={() => setShowProfileDropdown(true)}
+                  onMouseLeave={() => setShowProfileDropdown(false)}
+                >
+                  <Link 
+                    href="/profile" 
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mr-3"></div>
+                    Profile
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await logout();
+                        window.location.href = '/';
+                      } catch (error) {
+                        console.error('Error signing out:', error);
+                      }
+                    }}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-gray-400 mr-3"></div>
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             AI-Powered Misinformation Analysis
@@ -155,44 +312,48 @@ export default function Analyzer() {
           </p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('upload')}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                activeTab === 'upload'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Upload className="w-4 h-4 inline mr-2" />
-              Upload File
-            </button>
-            <button
-              onClick={() => setActiveTab('url')}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                activeTab === 'url'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <LinkIcon className="w-4 h-4 inline mr-2" />
-              Paste URL
-            </button>
-            <button
-              onClick={() => setActiveTab('text')}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                activeTab === 'text'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <FileText className="w-4 h-4 inline mr-2" />
-              Paste Text
-            </button>
-          </div>
-        </div>
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Analysis Input (2/3 width) */}
+          <div className="lg:col-span-2">
+            {/* Tab Navigation */}
+            <div className="flex justify-center mb-8">
+              <div className="bg-gray-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setActiveTab('upload')}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    activeTab === 'upload'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Upload className="w-4 h-4 inline mr-2" />
+                  Upload File
+                </button>
+                <button
+                  onClick={() => setActiveTab('url')}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    activeTab === 'url'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <LinkIcon className="w-4 h-4 inline mr-2" />
+                  Paste URL
+                </button>
+                <button
+                  onClick={() => setActiveTab('text')}
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                    activeTab === 'text'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <FileText className="w-4 h-4 inline mr-2" />
+                  Paste Text
+                </button>
+              </div>
+            </div>
 
         {/* Content Input Area */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
@@ -320,37 +481,6 @@ export default function Analyzer() {
           </div>
         </div>
 
-        {/* Feature Highlights */}
-        <div className="mt-12 grid md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <FileText className="w-6 h-6 text-blue-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Text Analysis</h3>
-            <p className="text-gray-600">
-              Detects emotional manipulation, false statistics, and misleading language patterns
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Image className="w-6 h-6 text-green-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Image Verification</h3>
-            <p className="text-gray-600">
-              Identifies manipulated images, deepfakes, and visual inconsistencies
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Video className="w-6 h-6 text-purple-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Video Analysis</h3>
-            <p className="text-gray-600">
-              Detects video manipulation, deepfakes, and suspicious editing patterns
-            </p>
-          </div>
-        </div>
-
         {/* Error Display */}
         {error && (
           <div className="mt-8 bg-red-50 border border-red-200 rounded-lg p-6">
@@ -366,7 +496,10 @@ export default function Analyzer() {
 
         {/* Analysis Results */}
         {analysisResult && (
-          <div className="mt-8 bg-white border border-gray-200 rounded-2xl shadow-lg p-8 relative overflow-hidden">
+          <div 
+            ref={analysisResultRef}
+            className="mt-8 bg-white border border-gray-200 rounded-2xl shadow-lg p-8 relative overflow-hidden"
+          >
             {/* Background decoration */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full transform translate-x-16 -translate-y-16 opacity-60"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-green-50 to-blue-50 rounded-full transform -translate-x-12 translate-y-12 opacity-60"></div>
@@ -404,7 +537,7 @@ export default function Analyzer() {
                         {analysisResult.risk_score}
                       </div>
                       <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                        <span className="bg-white text-gray-600 text-xs font-medium px-2 py-1 rounded-full shadow border">
+                        <span className="bg-white text-gray-700 text-xs font-medium px-2 py-1 rounded-full shadow border">
                           /100
                         </span>
                       </div>
@@ -420,7 +553,7 @@ export default function Analyzer() {
                       }`}>
                         {analysisResult.summary_title}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-700 font-medium">
                         {analysisResult.risk_score <= 30 
                           ? 'Low risk of misinformation' 
                           : analysisResult.risk_score <= 70 
@@ -434,9 +567,9 @@ export default function Analyzer() {
 
                 {/* Progress Bar */}
                 <div className="space-y-3">
-                  <div className="flex justify-between text-sm text-gray-600">
+                  <div className="flex justify-between text-sm text-gray-700 font-medium">
                     <span>Risk Level</span>
-                    <span className="font-medium">{analysisResult.risk_score}% Risk Score</span>
+                    <span className="font-semibold">{analysisResult.risk_score}% Risk Score</span>
                   </div>
                   <div className="relative">
                     <div className="w-full bg-gray-300 rounded-full h-4 shadow-inner">
@@ -452,7 +585,7 @@ export default function Analyzer() {
                       ></div>
                     </div>
                     {/* Risk level markers */}
-                    <div className="flex justify-between mt-2 text-xs text-gray-500">
+                    <div className="flex justify-between mt-2 text-xs text-gray-600 font-medium">
                       <span className="flex flex-col items-center">
                         <div className="w-1 h-2 bg-green-400 rounded-full mb-1"></div>
                         Low
@@ -478,7 +611,7 @@ export default function Analyzer() {
                 </h3>
                 <div className="bg-gray-50 rounded-lg p-6 border border-gray-100">
                   <div 
-                    className="text-gray-700 leading-relaxed prose max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-p:mb-4 prose-ul:my-4 prose-li:mb-2"
+                    className="text-gray-800 leading-relaxed prose max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-p:mb-4 prose-ul:my-4 prose-li:mb-2 prose-strong:text-gray-900 prose-p:text-gray-800"
                     dangerouslySetInnerHTML={{ __html: analysisResult.explanation_html }}
                   />
                 </div>
@@ -515,7 +648,7 @@ export default function Analyzer() {
                               {source.snippet}
                             </p>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                              <span className="text-xs text-gray-700 bg-gray-200 px-2 py-1 rounded-full font-medium">
                                 {source.source}
                               </span>
                               <a 
@@ -569,6 +702,54 @@ export default function Analyzer() {
             </div>
           </div>
         )}
+          </div>
+
+          {/* Right Column - Analysis Cards (1/3 width) */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8 space-y-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Analysis Tools</h2>
+              
+              {/* Text Analysis Card */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 ml-4">Text Analysis</h3>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Detects emotional manipulation, false statistics, and misleading language patterns
+                </p>
+              </div>
+
+              {/* Image Verification Card */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Image className="w-6 h-6 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 ml-4">Image Verification</h3>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Identifies manipulated images, deepfakes, and visual inconsistencies
+                </p>
+              </div>
+
+              {/* Video Analysis Card */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Video className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 ml-4">Video Analysis</h3>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Detects video manipulation, deepfakes, and suspicious editing patterns
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );

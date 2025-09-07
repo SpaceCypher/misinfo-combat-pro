@@ -116,6 +116,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       const provider = new GoogleAuthProvider();
       
+      // Add scopes to ensure we get profile picture
+      provider.addScope('profile');
+      provider.addScope('email');
+      
       // Try popup first, fallback to redirect if it fails
       try {
         await signInWithPopup(auth, provider);

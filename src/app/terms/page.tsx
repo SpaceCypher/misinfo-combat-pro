@@ -1,26 +1,92 @@
+'use client';
+
 import Link from 'next/link';
 import { Shield, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/lib/simple-auth-context';
 
 export default function Terms() {
+  const { user } = useAuth();
+  
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 transition-colors">
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Home</span>
-              </Link>
-              <div className="w-px h-6 bg-gray-300"></div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-gray-900">MisInfo Combat Pro</span>
+            {/* Left side - Logo/Brand */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
+                <Shield className="w-5 h-5 text-white" />
               </div>
+              <h1 className="text-xl font-bold text-gray-900">MisInfo Combat Pro</h1>
             </div>
+
+            {/* Center - Navigation */}
+            <nav className="flex items-center space-x-8">
+              <Link
+                href="/dashboard"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/training"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Training
+              </Link>
+              <Link
+                href="/analyzer"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Analyze
+              </Link>
+              <Link
+                href="/verifier"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Verify
+              </Link>
+            </nav>
+
+            {/* Right side - Profile */}
+            {user ? (
+              <Link href="/profile" className="flex items-center space-x-3 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors">
+                <div className="flex flex-col items-end">
+                  <span className="text-sm font-medium text-gray-900">
+                    {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                  </span>
+                  <span className="text-xs text-gray-500">Level 3</span>
+                </div>
+                <div className="w-8 h-8 rounded-full overflow-hidden">
+                  {user?.photoURL ? (
+                    <img 
+                      src={user.photoURL} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">
+                        {user?.displayName ? 
+                          user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 
+                          user?.email?.[0]?.toUpperCase() || 'U'
+                        }
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </Link>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Link href="/auth/signin" className="text-gray-600 hover:text-blue-600 font-medium transition-colors">
+                  Sign In
+                </Link>
+                <Link href="/auth/signup" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </header>

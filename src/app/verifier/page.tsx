@@ -1,10 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Shield, ArrowLeft, Search, FileText, Link as LinkIcon, CheckCircle, XCircle, AlertCircle, ExternalLink, Upload, Image, Video, Play, Download, Share2, Save } from 'lucide-react';
+import { useAuth } from '@/lib/simple-auth-context';
 
 export default function Verifier() {
+  const { user, logout } = useAuth();
+  const [imageError, setImageError] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  
+  // Reset image error when user changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.photoURL]);
+  
   const [activeTab, setActiveTab] = useState<'text' | 'url' | 'image' | 'video'>('text');
   const [textInput, setTextInput] = useState('');
   const [urlInput, setUrlInput] = useState('');
@@ -279,31 +290,115 @@ export default function Verifier() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard" className="flex items-center space-x-1 text-gray-600 hover:text-gray-900 transition-colors">
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Dashboard</span>
-              </Link>
-              <div className="w-px h-6 bg-gray-300"></div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                  <Search className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-gray-900">Real-Time Claim Verifier</span>
+            {/* Left side - Logo/Brand */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
+                <Shield className="w-5 h-5 text-white" />
               </div>
+              <h1 className="text-xl font-bold text-gray-900">MisInfo Combat Pro</h1>
             </div>
-            
-            {/* Navigation Tabs */}
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">Dashboard</Link>
-              <Link href="/training" className="text-gray-600 hover:text-gray-900 transition-colors">Training</Link>
-              <Link href="/analyzer" className="text-gray-600 hover:text-gray-900 transition-colors">Analyze</Link>
-              <Link href="/verifier" className="text-purple-600 font-medium border-b-2 border-purple-600">Verify</Link>
+
+            {/* Center - Navigation */}
+            <nav className="flex items-center space-x-8">
+              <Link
+                href="/dashboard"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/training"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Training
+              </Link>
+              <Link
+                href="/analyzer"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Analyze
+              </Link>
+              <Link
+                href="/verifier"
+                className="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1"
+                aria-current="page"
+              >
+                Verify
+              </Link>
             </nav>
-            
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-600">Level 3</span>
-              <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+
+            {/* Right side - Profile */}
+            <div className="relative">
+              <div 
+                className="flex items-center space-x-3 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors cursor-pointer"
+                onMouseEnter={() => setShowProfileDropdown(true)}
+                onMouseLeave={() => setShowProfileDropdown(false)}
+              >
+                <div className="flex flex-col items-end">
+                  <span className="text-sm font-medium text-gray-900">
+                    {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                  </span>
+                  <span className="text-xs text-gray-500">Level 3</span>
+                </div>
+                <div className="w-8 h-8 rounded-full overflow-hidden">
+                  {user?.photoURL && !imageError ? (
+                    <img 
+                      src={`/api/proxy-image?url=${encodeURIComponent(user.photoURL)}`}
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.log('Verifier: Proxy image failed, trying direct URL:', user?.photoURL);
+                        e.currentTarget.src = user?.photoURL || '';
+                        e.currentTarget.onerror = () => {
+                          console.log('Verifier: Direct URL also failed');
+                          setImageError(true);
+                        };
+                      }}
+                      onLoad={() => console.log('Verifier: Image loaded successfully via proxy')}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">
+                        {user?.displayName ? 
+                          user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 
+                          user?.email?.[0]?.toUpperCase() || 'U'
+                        }
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Profile Dropdown */}
+              {showProfileDropdown && (
+                <div 
+                  className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                  onMouseEnter={() => setShowProfileDropdown(true)}
+                  onMouseLeave={() => setShowProfileDropdown(false)}
+                >
+                  <Link 
+                    href="/profile" 
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mr-3"></div>
+                    Profile
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await logout();
+                        window.location.href = '/';
+                      } catch (error) {
+                        console.error('Error signing out:', error);
+                      }
+                    }}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-gray-400 mr-3"></div>
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

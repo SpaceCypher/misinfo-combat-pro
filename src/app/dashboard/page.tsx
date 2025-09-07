@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/simple-auth-context';
 import Link from 'next/link';
@@ -15,6 +15,12 @@ function DashboardContent() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  // Reset image error when user changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.photoURL]);
 
   const handleSignOut = async () => {
     try {
@@ -150,7 +156,25 @@ function DashboardContent() {
             </h3>
             <div className="space-y-1">
               <Link href="/profile" className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
-                <User className="w-5 h-5" />
+                <div className="w-5 h-5 rounded-full overflow-hidden">
+                  {user?.photoURL && !imageError ? (
+                    <img 
+                      src={`/api/proxy-image?url=${encodeURIComponent(user.photoURL)}`}
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                      onError={() => setImageError(true)}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <span className="text-white text-xs font-semibold">
+                        {user?.displayName ? 
+                          user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 
+                          user?.email?.[0]?.toUpperCase() || 'U'
+                        }
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <span>Profile</span>
               </Link>
               <Link href="/settings" className="flex items-center space-x-3 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
@@ -206,9 +230,35 @@ function DashboardContent() {
                 <span className="font-medium text-blue-600">Level 3</span>
               </div>
               <Link href="/profile" className="flex items-center space-x-2 hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors">
-                <User className="w-5 h-5 text-gray-400" />
+                <div className="w-5 h-5 rounded-full overflow-hidden">
+                  {user?.photoURL && !imageError ? (
+                    <img 
+                      src={`/api/proxy-image?url=${encodeURIComponent(user.photoURL)}`}
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.log('Dashboard: Proxy image failed, trying direct URL:', user?.photoURL);
+                        e.currentTarget.src = user?.photoURL || '';
+                        e.currentTarget.onerror = () => {
+                          console.log('Dashboard: Direct URL also failed');
+                          setImageError(true);
+                        };
+                      }}
+                      onLoad={() => console.log('Dashboard: Image loaded successfully via proxy')}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <span className="text-white text-xs font-semibold">
+                        {user?.displayName ? 
+                          user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 
+                          user?.email?.[0]?.toUpperCase() || 'U'
+                        }
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <span className="hidden sm:block text-gray-700 font-medium">
-                  {user?.displayName || 'Priya'}
+                  {user?.displayName || user?.email?.split('@')[0] || 'User'}
                 </span>
               </Link>
               <button

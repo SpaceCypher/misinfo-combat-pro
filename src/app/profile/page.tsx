@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/simple-auth-context';
 import Link from 'next/link';
@@ -14,9 +14,17 @@ import {
 
 function ProfileContent() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  
+  // Reset image error when user changes
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.photoURL]);
+  
   const [editForm, setEditForm] = useState({
     displayName: user?.displayName || 'Sanidhya Kumar',
     bio: 'Student & Fact Checker',
@@ -79,27 +87,107 @@ function ProfileContent() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            {/* Left side - Logo/Brand */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">MisInfo Combat Pro</span>
-            </Link>
+              <h1 className="text-xl font-bold text-gray-900">MisInfo Combat Pro</h1>
+            </div>
 
-            {/* Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors py-2">Dashboard</Link>
-              <Link href="/training" className="text-gray-600 hover:text-gray-900 transition-colors py-2">Training</Link>
-              <Link href="/analyzer" className="text-gray-600 hover:text-gray-900 transition-colors py-2">Analyze</Link>
-              <Link href="/verify" className="text-gray-600 hover:text-gray-900 transition-colors py-2">Verify</Link>
-              <span className="text-blue-600 font-medium border-b-2 border-blue-600 py-2">Profile</span>
+            {/* Center - Navigation */}
+            <nav className="flex items-center space-x-8">
+              <Link
+                href="/dashboard"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/training"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Training
+              </Link>
+              <Link
+                href="/analyzer"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Analyze
+              </Link>
+              <Link
+                href="/verifier"
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                Verify
+              </Link>
             </nav>
 
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Level 3</span>
-              <Link href="/profile" className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors">
-                <User className="w-5 h-5 text-gray-600" />
-              </Link>
+            {/* Right side - Profile (highlighted since we're on profile page) */}
+            <div className="relative">
+              <div 
+                className="flex items-center space-x-3 bg-blue-50 px-3 py-2 rounded-lg transition-colors cursor-pointer"
+                onMouseEnter={() => setShowProfileDropdown(true)}
+                onMouseLeave={() => setShowProfileDropdown(false)}
+              >
+                <div className="flex flex-col items-end">
+                  <span className="text-sm font-medium text-blue-600">
+                    {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                  </span>
+                  <span className="text-xs text-blue-500">Level 3 • Profile</span>
+                </div>
+                <div className="w-8 h-8 rounded-full overflow-hidden">
+                  {user?.photoURL && !imageError ? (
+                    <img 
+                      src={`/api/proxy-image?url=${encodeURIComponent(user.photoURL)}`}
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.log('Profile: Proxy image failed, trying direct URL:', user?.photoURL);
+                        e.currentTarget.src = user?.photoURL || '';
+                        e.currentTarget.onerror = () => {
+                          console.log('Profile: Direct URL also failed');
+                          setImageError(true);
+                        };
+                      }}
+                      onLoad={() => console.log('Profile: Image loaded successfully via proxy')}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">
+                        {user?.displayName ? 
+                          user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 
+                          user?.email?.[0]?.toUpperCase() || 'U'
+                        }
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Profile Dropdown */}
+              {showProfileDropdown && (
+                <div 
+                  className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                  onMouseEnter={() => setShowProfileDropdown(true)}
+                  onMouseLeave={() => setShowProfileDropdown(false)}
+                >
+                  <Link 
+                    href="/profile" 
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mr-3"></div>
+                    Profile
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-red-500 mr-3"></div>
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -294,7 +382,7 @@ function ProfileContent() {
                       <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
                         <User className="w-5 h-5 text-gray-400" />
                         <span className="text-gray-900 font-medium">
-                          {user.displayName || 'Sanidhya Kumar'}
+                          {user.displayName}
                         </span>
                       </div>
                     </div>
