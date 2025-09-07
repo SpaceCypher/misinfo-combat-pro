@@ -15,6 +15,12 @@ export default function Analyzer() {
     risk_score: number;
     summary_title: string;
     explanation_html: string;
+    sources?: Array<{
+      title: string;
+      link: string;
+      snippet: string;
+      source: string;
+    }>;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,34 +61,58 @@ export default function Analyzer() {
     setAnalysisResult(null);
 
     try {
-      // For now, we'll only handle text analysis since that's what we deployed
+      let requestBody: any = {};
+
       if (activeTab === 'text' && textInput.trim()) {
-        const response = await fetch('https://us-central1-optical-habitat-470918-f2.cloudfunctions.net/misinfo-proxy', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            text: textInput.trim()
-          }),
+        requestBody = { text: textInput.trim() };
+      } else if (activeTab === 'upload' && selectedFile) {
+        // Convert file to base64
+        const fileData = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
+            const base64Data = result.split(',')[1];
+            resolve(base64Data);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(selectedFile);
         });
 
-        const result = await response.json();
-        
-        if (!response.ok) {
-          if (response.status === 429) {
-            setError('Service is temporarily busy due to high demand. Please try again in a few minutes.');
-          } else {
-            throw new Error(`Analysis failed: ${response.status} - ${result.error || 'Unknown error'}`);
+        requestBody = {
+          file: {
+            data: fileData,
+            type: selectedFile.type,
+            name: selectedFile.name
           }
-          return;
-        }
-
-        setAnalysisResult(result);
+        };
+      } else if (activeTab === 'url' && urlInput.trim()) {
+        requestBody = { url: urlInput.trim() };
       } else {
-        // Placeholder for URL and file upload functionality
-        setError('URL and file upload analysis will be available soon. Please use text analysis for now.');
+        setError('Please provide valid input for analysis.');
+        return;
       }
+
+      const response = await fetch('https://us-central1-optical-habitat-470918-f2.cloudfunctions.net/pure-proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        if (response.status === 429) {
+          setError('Service is temporarily busy due to high demand. Please try again in a few minutes.');
+        } else {
+          throw new Error(`Analysis failed: ${response.status} - ${result.error || 'Unknown error'}`);
+        }
+        return;
+      }
+
+      setAnalysisResult(result);
     } catch (err) {
       console.error('Analysis error:', err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred during analysis.');
@@ -211,13 +241,13 @@ export default function Analyzer() {
                         Drag and drop your file here, or click to browse
                       </p>
                       <p className="text-gray-600 mt-2">
-                        Supports text files, images (JPG, PNG), and videos (MP4, MOV)
+                        Supports text files, images (JPG, PNG, GIF, WebP), and videos (MP4, MOV, AVI, MKV)
                       </p>
                     </div>
                     <input
                       type="file"
                       onChange={handleFileChange}
-                      accept=".txt,.pdf,.jpg,.jpeg,.png,.mp4,.mov"
+                      accept=".txt,.pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.avi,.mkv"
                       className="hidden"
                       id="file-upload"
                     />
@@ -454,6 +484,57 @@ export default function Analyzer() {
                 </div>
               </div>
 
+              {/* Sources Section */}
+              {analysisResult.sources && analysisResult.sources.length > 0 && (
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                    Sources & References
+                  </h3>
+                  <div className="space-y-4">
+                    {analysisResult.sources.map((source, index) => (
+                      <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-100 hover:border-gray-200 transition-colors">
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 font-semibold text-sm">{index + 1}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <h4 className="text-base font-semibold text-gray-900 line-clamp-2">
+                                <a 
+                                  href={source.link} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="hover:text-blue-600 transition-colors"
+                                >
+                                  {source.title}
+                                </a>
+                              </h4>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2 line-clamp-3">
+                              {source.snippet}
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                                {source.source}
+                              </span>
+                              <a 
+                                href={source.link} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                              >
+                                View Source →
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
                 <button
@@ -470,7 +551,13 @@ export default function Analyzer() {
                 </button>
                 <button
                   onClick={() => {
-                    const resultText = `Analysis Result:\nRisk Score: ${analysisResult.risk_score}/100\nSummary: ${analysisResult.summary_title}\n\nDetailed Analysis:\n${analysisResult.explanation_html.replace(/<[^>]*>/g, '')}`;
+                    const sourcesText = analysisResult.sources && analysisResult.sources.length > 0 
+                      ? `\n\nSources:\n${analysisResult.sources.map((source, index) => 
+                          `${index + 1}. ${source.title}\n   ${source.link}\n   ${source.snippet}`
+                        ).join('\n\n')}`
+                      : '';
+                    
+                    const resultText = `Analysis Result:\nRisk Score: ${analysisResult.risk_score}/100\nSummary: ${analysisResult.summary_title}\n\nDetailed Analysis:\n${analysisResult.explanation_html.replace(/<[^>]*>/g, '')}${sourcesText}`;
                     navigator.clipboard.writeText(resultText);
                   }}
                   className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"

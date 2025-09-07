@@ -41,45 +41,197 @@ export default function Verifier() {
 
   const handleVerify = async () => {
     setIsAnalyzing(true);
+    setResults(null);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      let response;
+      const API_URL = 'https://us-central1-optical-habitat-470918-f2.cloudfunctions.net/misinfo-proxy';
+      
+      if (activeTab === 'text' && textInput.trim()) {
+        // First extract claims using the claim-extractor
+        const claimResponse = await fetch('https://us-central1-optical-habitat-470918-f2.cloudfunctions.net/claim-extractor', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: textInput.trim()
+          }),
+        });
+        
+        if (!claimResponse.ok) {
+          throw new Error('Failed to extract claims');
+        }
+        
+        const claimData = await claimResponse.json();
+        
+        // Then verify using vertex-search-agent for high-credibility scoring
+        if (claimData.claims && claimData.claims.length > 0) {
+          response = await fetch('https://us-central1-optical-habitat-470918-f2.cloudfunctions.net/vertex-search-agent', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              claims: claimData.claims
+            }),
+          });
+        } else {
+          // Fallback to original verification if no claims extracted
+          response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              claims: textInput.trim(),
+              mode: 'verify'
+            }),
+          });
+        }
+      } else if (activeTab === 'url' && urlInput.trim()) {
+        // URL analysis
+        response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: urlInput.trim()
+          }),
+        });
+      } else if (selectedFile) {
+        // File upload analysis
+        const base64 = await fileToBase64(selectedFile);
+        response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            file: {
+              data: base64,
+              type: selectedFile.type,
+              name: selectedFile.name
+            }
+          }),
+        });
+      } else {
+        throw new Error('Please provide content to verify');
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Transform API response to UI format
+      const transformedResults = transformApiResults(data, activeTab);
+      setResults(transformedResults);
+      
+    } catch (error) {
+      console.error('Verification error:', error);
       setResults({
-        overallCredibility: '67% Reliable',
-        claims: [
-          {
-            id: 1,
-            text: "The new government policy will reduce unemployment by 15% within six months, according to official statistics released yesterday.",
-            status: 'verified',
-            confidence: 88,
-            sources: [
-              { name: 'Official Government Portal', type: 'Government', credibility: 'high' },
-              { name: 'Times of India', type: 'Media', credibility: 'medium' }
-            ],
-            explanation: "Confirmed by official government sources and verified against PMO announcements."
-          },
-          {
-            id: 2,
-            text: "The program has already created 50,000 jobs in major cities.",
-            status: 'unverified',
-            confidence: 94,
-            sources: [],
-            explanation: "No official sources found to support this specific job creation number."
-          },
-          {
-            id: 3,
-            text: "Statistics released yesterday.",
-            status: 'partial',
-            confidence: 94,
-            sources: [
-              { name: 'Released 3 days ago', type: 'Timing', credibility: 'medium' }
-            ],
-            explanation: "Date discrepancy found in the claim."
-          }
-        ]
+        error: true,
+        message: error instanceof Error ? error.message : 'Failed to verify content. Please try again.',
+        overallCredibility: 'Error',
+        claims: []
       });
+    } finally {
       setIsAnalyzing(false);
-    }, 3000);
+    }
+  };
+
+  // Helper function to convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        // Remove data:image/jpeg;base64, prefix
+        const base64Data = base64.split(',')[1];
+        resolve(base64Data);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  // Transform API results to match UI expectations
+  const transformApiResults = (data: any, inputType: string) => {
+    if (data.error) {
+      return {
+        error: true,
+        message: data.message || 'Verification failed',
+        overallCredibility: 'Error',
+        claims: []
+      };
+    }
+
+    // Handle claim verification mode results
+    if (data.verified_claims) {
+      const claims = data.verified_claims.map((claim: any, index: number) => ({
+        id: index + 1,
+        text: claim.claim,
+        status: getVerificationStatus(claim.credibility_score),
+        confidence: claim.credibility_score,
+        sources: claim.evidence?.sources || [],
+        explanation: claim.evidence?.summary || claim.credibility_level || 'No detailed explanation available'
+      }));
+
+      return {
+        overallCredibility: `${data.overall_credibility_score}% ${data.overall_credibility_level}`,
+        claims,
+        summary: data.summary,
+        claimsFound: data.claims_found
+      };
+    }
+
+    // Handle standard analysis results (text, URL, file)
+    if (data.risk_score !== undefined) {
+      return {
+        overallCredibility: `${100 - data.risk_score}% Reliable (Risk: ${data.risk_score}%)`,
+        claims: [{
+          id: 1,
+          text: extractMainClaimFromAnalysis(data, inputType),
+          status: data.risk_score > 70 ? 'unverified' : data.risk_score > 30 ? 'partial' : 'verified',
+          confidence: Math.max(10, 100 - data.risk_score),
+          sources: data.sources || [],
+          explanation: data.summary_title || 'Analysis completed'
+        }],
+        analysisHtml: data.explanation_html,
+        riskScore: data.risk_score
+      };
+    }
+
+    // Fallback for unexpected response format
+    return {
+      error: true,
+      message: 'Unexpected response format from verification service',
+      overallCredibility: 'Unknown',
+      claims: []
+    };
+  };
+
+  // Helper to determine verification status from credibility score
+  const getVerificationStatus = (score: number) => {
+    if (score >= 70) return 'verified';
+    if (score >= 40) return 'partial';
+    return 'unverified';
+  };
+
+  // Helper to extract main claim from analysis
+  const extractMainClaimFromAnalysis = (data: any, inputType: string) => {
+    if (inputType === 'url') {
+      return `Content from URL: Analysis of web article content`;
+    } else if (inputType === 'image') {
+      return `Image content: Visual and text analysis of uploaded image`;
+    } else if (inputType === 'video') {
+      return `Video content: Multimodal analysis of uploaded video`;
+    } else {
+      return `Text content: Analysis of provided text content`;
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -351,7 +503,7 @@ export default function Verifier() {
             )}
 
             {/* Verification Results */}
-            {results && (
+            {results && !results.error && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">Verification Results</h3>
@@ -361,45 +513,82 @@ export default function Verifier() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900">Extracted Claims</h4>
-                  {results.claims.map((claim: any) => (
-                    <div key={claim.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(claim.status)}
-                          <span className={`font-semibold text-sm ${claim.status === 'verified' ? 'text-green-600' : claim.status === 'unverified' ? 'text-red-600' : 'text-yellow-600'}`}>
-                            Claim {claim.id}: {getStatusText(claim.status)}
-                          </span>
-                        </div>
-                        <span className="text-sm text-gray-600">Credibility: {claim.confidence}%</span>
-                      </div>
-                      
-                      <p className="text-gray-800 mb-3 italic">"{claim.text}"</p>
-                      
-                      {claim.sources.length > 0 && (
-                        <div className="mb-3">
-                          <p className="text-sm font-medium text-gray-700 mb-2">Sources:</p>
-                          <div className="space-y-1">
-                            {claim.sources.map((source: any, index: number) => (
-                              <div key={index} className="flex items-center space-x-2 text-sm">
-                                <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                                <span className="text-gray-700">{source.name}</span>
-                                {source.type && (
-                                  <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-                                    {source.type}
-                                  </span>
-                                )}
-                              </div>
-                            ))}
+                {results.summary && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">{results.summary}</p>
+                  </div>
+                )}
+
+                {results.claims && results.claims.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">
+                      {results.claimsFound ? `Extracted Claims (${results.claimsFound} found)` : 'Analysis Results'}
+                    </h4>
+                    {results.claims.map((claim: any) => (
+                      <div key={claim.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            {getStatusIcon(claim.status)}
+                            <span className={`font-semibold text-sm ${claim.status === 'verified' ? 'text-green-600' : claim.status === 'unverified' ? 'text-red-600' : 'text-yellow-600'}`}>
+                              {results.claimsFound ? `Claim ${claim.id}:` : 'Analysis:'} {getStatusText(claim.status)}
+                            </span>
                           </div>
+                          <span className="text-sm text-gray-600">Credibility: {claim.confidence}%</span>
                         </div>
-                      )}
-                      
-                      <p className="text-sm text-gray-600">{claim.explanation}</p>
-                    </div>
-                  ))}
+                        
+                        <p className="text-gray-800 mb-3 italic">"{claim.text}"</p>
+                        
+                        {claim.sources && claim.sources.length > 0 && (
+                          <div className="mb-3">
+                            <p className="text-sm font-medium text-gray-700 mb-2">Sources:</p>
+                            <div className="space-y-1">
+                              {claim.sources.map((source: any, index: number) => (
+                                <div key={index} className="flex items-center space-x-2 text-sm">
+                                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                  <span className="text-gray-700">{source.name || source}</span>
+                                  {source.type && (
+                                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                                      {source.type}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <p className="text-sm text-gray-600">{claim.explanation}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {results.analysisHtml && (
+                  <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-semibold text-gray-900 mb-3">Detailed Analysis</h4>
+                    <div 
+                      className="text-sm text-gray-700 prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: results.analysisHtml }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Error Display */}
+            {results && results.error && (
+              <div className="bg-white rounded-xl shadow-sm border border-red-200 p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <XCircle className="w-6 h-6 text-red-600" />
+                  <h3 className="text-lg font-semibold text-red-900">Verification Failed</h3>
                 </div>
+                <p className="text-red-700 mb-4">{results.message}</p>
+                <button
+                  onClick={() => setResults(null)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Try Again
+                </button>
               </div>
             )}
 
