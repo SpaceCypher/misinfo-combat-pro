@@ -158,7 +158,7 @@ export default function Training() {
                   <span className="text-sm font-medium text-gray-900">
                     {user?.displayName || user?.email?.split('@')[0] || 'User'}
                   </span>
-                  <span className="text-xs text-gray-500">Level 3</span>
+                  <span className="text-xs text-gray-700">Level 3</span>
                 </div>
                 <div className="w-8 h-8 rounded-full overflow-hidden">
                   {user?.photoURL && !imageError ? (
@@ -319,7 +319,7 @@ export default function Training() {
               <p className="text-gray-600 mb-4 leading-relaxed">{module.description}</p>
 
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-1 text-gray-500">
+                <div className="flex items-center space-x-1 text-gray-700">
                   <Clock className="w-4 h-4" />
                   <span className="text-sm">{module.duration}</span>
                 </div>

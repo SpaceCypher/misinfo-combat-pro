@@ -338,7 +338,7 @@ export default function Verifier() {
                   <span className="text-sm font-medium text-gray-900">
                     {user?.displayName || user?.email?.split('@')[0] || 'User'}
                   </span>
-                  <span className="text-xs text-gray-500">Level 3</span>
+                  <span className="text-xs text-gray-700">Level 3</span>
                 </div>
                 <div className="w-8 h-8 rounded-full overflow-hidden">
                   {user?.photoURL && !imageError ? (
@@ -593,7 +593,7 @@ export default function Verifier() {
                 <div className="bg-gray-100 rounded-full h-2">
                   <div className="bg-purple-600 h-2 rounded-full animate-pulse" style={{ width: '67%' }}></div>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">Processing claims... 67%</p>
+                <p className="text-sm text-gray-700 mt-2">Processing claims... 67%</p>
               </div>
             )}
 

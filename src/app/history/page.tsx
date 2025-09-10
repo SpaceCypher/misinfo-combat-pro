@@ -327,7 +327,7 @@ export default function HistoryPage() {
                   <span className="text-sm font-medium text-gray-900">
                     {user?.displayName || user?.email?.split('@')[0] || 'User'}
                   </span>
-                  <span className="text-xs text-gray-500">Level 3</span>
+                  <span className="text-xs text-gray-700">Level 3</span>
                 </div>
                 <div className="w-8 h-8 rounded-full overflow-hidden">
                   {user?.photoURL && !imageError ? (
@@ -565,19 +565,19 @@ export default function HistoryPage() {
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Content
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Risk Score
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -610,7 +610,7 @@ export default function HistoryPage() {
                            item.score >= 60 ? 'Medium Risk Content' :
                            item.score >= 40 ? 'Low Risk Content' : 'Content Appears Safe'}
                         </p>
-                        <p className="text-xs text-gray-500 truncate mt-1">
+                        <p className="text-xs text-gray-700 truncate mt-1">
                           {item.type === 'url' ? item.content : `${item.content.substring(0, 60)}...`}
                         </p>
                       </div>
@@ -624,7 +624,7 @@ export default function HistoryPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center space-x-1 text-sm text-gray-500">
+                      <div className="flex items-center space-x-1 text-sm text-gray-700">
                         <Calendar className="w-4 h-4" />
                         <span>{formatDate(item.timestamp instanceof Date ? item.timestamp : item.timestamp.toDate())}</span>
                       </div>

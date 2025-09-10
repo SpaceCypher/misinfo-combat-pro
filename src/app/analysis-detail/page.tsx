@@ -226,7 +226,7 @@ const AnalysisDetailContent = () => {
                    analysis.score >= 60 ? 'Medium Risk Content' :
                    analysis.score >= 40 ? 'Low Risk Content' : 'Content Appears Safe'}
                 </h1>
-                <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                <div className="flex items-center space-x-4 mt-2 text-sm text-gray-700">
                   <div className="flex items-center space-x-1">
                     <Calendar className="w-4 h-4" />
                     <span>{formatDate(analysis.timestamp instanceof Date ? analysis.timestamp : analysis.timestamp.toDate())}</span>

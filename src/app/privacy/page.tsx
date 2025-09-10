@@ -56,7 +56,7 @@ export default function Privacy() {
                   <span className="text-sm font-medium text-gray-900">
                     {user?.displayName || user?.email?.split('@')[0] || 'User'}
                   </span>
-                  <span className="text-xs text-gray-500">Level 3</span>
+                  <span className="text-xs text-gray-700">Level 3</span>
                 </div>
                 <div className="w-8 h-8 rounded-full overflow-hidden">
                   {user?.photoURL ? (

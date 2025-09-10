@@ -65,7 +65,7 @@ function DashboardContent() {
             {/* Mobile Navigation */}
             <nav className="flex-1 p-4">
               <div className="mb-6">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3">
                   Main Features
                 </h3>
                 <div className="space-y-1">
@@ -107,7 +107,7 @@ function DashboardContent() {
         {/* Navigation */}
         <nav className="flex-1 p-4">
           <div className="mb-6">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3">
               Main Features
             </h3>
             <div className="space-y-1">
@@ -131,7 +131,7 @@ function DashboardContent() {
           </div>
 
           <div className="mb-6">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3">
               Activity
             </h3>
             <div className="space-y-1">
@@ -151,7 +151,7 @@ function DashboardContent() {
           </div>
 
           <div className="mb-6">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3">
               Account
             </h3>
             <div className="space-y-1">
@@ -196,7 +196,7 @@ function DashboardContent() {
             <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
               <div className="bg-orange-500 h-2 rounded-full" style={{ width: '75%' }}></div>
             </div>
-            <p className="text-xs text-gray-500">4/5 analyses today</p>
+            <p className="text-xs text-gray-700">4/5 analyses today</p>
           </div>
         </nav>
       </aside>
@@ -285,7 +285,7 @@ function DashboardContent() {
                 </p>
               </div>
               <div className="text-left lg:text-right">
-                <p className="text-sm text-gray-500">Today's Date</p>
+                <p className="text-sm text-gray-700">Today's Date</p>
                 <p className="font-semibold text-gray-900">{currentDate}</p>
               </div>
             </div>
@@ -309,7 +309,7 @@ function DashboardContent() {
                         </p>
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mb-4 group-hover:border-blue-300 transition-colors">
                           <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2 group-hover:text-blue-500 transition-colors" />
-                          <p className="text-sm text-gray-500 group-hover:text-blue-600 transition-colors">
+                          <p className="text-sm text-gray-700 group-hover:text-blue-600 transition-colors">
                             Drag & drop or click to upload<br />
                             <span className="text-xs">Text, images, videos supported</span>
                           </p>
@@ -338,7 +338,7 @@ function DashboardContent() {
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{ width: '75%' }}></div>
                           </div>
-                          <p className="text-xs text-gray-500 mt-2">Intermediate Analysis - Lesson 9/12</p>
+                          <p className="text-xs text-gray-700 mt-2">Intermediate Analysis - Lesson 9/12</p>
                         </div>
                         <button className="w-full bg-gray-900 text-white py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors">
                           Continue Training
@@ -482,7 +482,7 @@ function DashboardContent() {
                       <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
                         <div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: '85%' }}></div>
                       </div>
-                      <p className="text-xs text-gray-500">850/1000 XP to Level 4</p>
+                      <p className="text-xs text-gray-700">850/1000 XP to Level 4</p>
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-2">
@@ -492,7 +492,7 @@ function DashboardContent() {
                       <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
                         <div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{ width: '92%' }}></div>
                       </div>
-                      <p className="text-xs text-gray-500">Average: 2.3 min per analysis</p>
+                      <p className="text-xs text-gray-700">Average: 2.3 min per analysis</p>
                     </div>
                   </div>
                   <button className="w-full mt-6 text-blue-600 hover:text-blue-700 text-sm font-medium">

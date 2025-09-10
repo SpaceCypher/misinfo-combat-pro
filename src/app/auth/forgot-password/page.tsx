@@ -55,7 +55,7 @@ export default function ForgotPassword() {
             <p className="text-gray-600 mb-6">
               We've sent a password reset link to <strong>{email}</strong>
             </p>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-gray-700 mb-6">
               Didn't receive the email? Check your spam folder or try again.
             </p>
             <Link

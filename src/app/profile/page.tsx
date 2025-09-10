@@ -210,7 +210,7 @@ function ProfileContent() {
                       {user.displayName || 'Sanidhya Kumar'}
                     </h1>
                     <p className="text-gray-600">Student & Fact Checker</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-700">
                       📅 Joined September 2025 • 📍 Mumbai, India
                     </p>
                   </div>
@@ -269,7 +269,7 @@ function ProfileContent() {
                     </div>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500">
+                  <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-700">
                     Accuracy Improvement Over Time
                     <div className="mt-2 text-sm">Chart visualization area</div>
                   </div>
@@ -291,7 +291,7 @@ function ProfileContent() {
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div className="bg-green-500 h-2 rounded-full" style={{ width: '100%' }}></div>
                         </div>
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <div className="flex justify-between text-xs text-gray-700 mt-1">
                           <span>12/12 lessons</span>
                           <span>100%</span>
                         </div>
@@ -305,7 +305,7 @@ function ProfileContent() {
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div className="bg-blue-500 h-2 rounded-full" style={{ width: '75%' }}></div>
                         </div>
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <div className="flex justify-between text-xs text-gray-700 mt-1">
                           <span>9/12 lessons</span>
                           <span>75%</span>
                         </div>
@@ -344,7 +344,7 @@ function ProfileContent() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="font-medium text-gray-900 truncate">{item.type}</div>
-                            <div className="text-sm text-gray-500 truncate">{item.date}</div>
+                            <div className="text-sm text-gray-700 truncate">{item.date}</div>
                           </div>
                         </div>
                         <div className="flex items-center justify-between sm:justify-end space-x-2 flex-shrink-0">
@@ -564,7 +564,7 @@ function ProfileContent() {
                 onClick={() => setIsEditPanelOpen(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-gray-700" />
               </button>
             </div>
 
