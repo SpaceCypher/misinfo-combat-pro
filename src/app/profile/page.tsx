@@ -526,19 +526,19 @@ function ProfileContent() {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Analyses completed</span>
-                  <span className="font-semibold">{mockStats.weeklyAnalyses}</span>
+                  <span className="text-gray-600 font-semibold">{mockStats.weeklyAnalyses}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Training time</span>
-                  <span className="font-semibold">{mockStats.trainingTime}</span>
+                  <span className="text-gray-600 font-semibold">{mockStats.trainingTime}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Accuracy score</span>
-                  <span className="font-semibold">{mockStats.accuracyScore}%</span>
+                  <span className="text-gray-600 font-semibold">{mockStats.accuracyScore}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Rank this week</span>
-                  <span className="font-semibold">#{mockStats.weekRank}</span>
+                  <span className="text-gray-600 font-semibold">#{mockStats.weekRank}</span>
                 </div>
               </div>
             </div>

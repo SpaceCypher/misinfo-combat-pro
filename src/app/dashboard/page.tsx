@@ -477,7 +477,7 @@ function DashboardContent() {
                     <div>
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600">Detection Skills</span>
-                        <span className="font-medium">Level 3</span>
+                        <span className="text-gray-700 font-medium">Level 3</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
                         <div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: '85%' }}></div>
@@ -487,7 +487,7 @@ function DashboardContent() {
                     <div>
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600">Verification Speed</span>
-                        <span className="font-medium">Advanced</span>
+                        <span className="text-gray-700 font-medium">Advanced</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
                         <div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{ width: '92%' }}></div>
