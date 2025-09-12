@@ -591,46 +591,14 @@ export default function Verifier() {
                   id: index + 1,
                   text: claimObj.claim_text,
                   status: (() => {
-                    // First check if API provided individual assessments
-                    if (data.individual_claim_assessments && Array.isArray(data.individual_claim_assessments)) {
-                      const apiAssessment = data.individual_claim_assessments.find(
-                        (assessment: any) => assessment.claim_text === claimObj.claim_text
-                      );
-                      if (apiAssessment) {
-                        return apiAssessment.verification_status || 'unverified';
-                      }
-                    }
-                    // Fallback to current logic if no API assessment available
+                    // Calculate individual claim confidence first
                     const claimConfidence = getClaimSpecificConfidence(claimObj.claim_text, data.credibility_score);
+                    // Use claim-specific confidence for status determination
                     return getClaimSpecificStatus(claimObj.claim_text, claimConfidence);
                   })(),
-                  confidence: (() => {
-                    // First check if API provided individual assessments
-                    if (data.individual_claim_assessments && Array.isArray(data.individual_claim_assessments)) {
-                      const apiAssessment = data.individual_claim_assessments.find(
-                        (assessment: any) => assessment.claim_text === claimObj.claim_text
-                      );
-                      if (apiAssessment) {
-                        return apiAssessment.credibility_score || 50;
-                      }
-                    }
-                    // Fallback to current logic if no API assessment available
-                    return getClaimSpecificConfidence(claimObj.claim_text, data.credibility_score);
-                  })(),
+                  confidence: getClaimSpecificConfidence(claimObj.claim_text, data.credibility_score),
                   sources: getRelevantSources(claimText, data.search_results || []),
-                  explanation: (() => {
-                    // First check if API provided individual assessments
-                    if (data.individual_claim_assessments && Array.isArray(data.individual_claim_assessments)) {
-                      const apiAssessment = data.individual_claim_assessments.find(
-                        (assessment: any) => assessment.claim_text === claimObj.claim_text
-                      );
-                      if (apiAssessment && apiAssessment.assessment_reason) {
-                        return `${claimObj.claim_type} claim (${claimObj.priority} priority): ${apiAssessment.assessment_reason}`;
-                      }
-                    }
-                    // Fallback to current logic if no API assessment available
-                    return getClaimSpecificExplanation(claimObj, data.explanation);
-                  })(),
+                  explanation: getClaimSpecificExplanation(claimObj, data.explanation),
                   type: claimObj.claim_type,
                   priority: claimObj.priority,
                   verifiable: claimObj.verifiable,
