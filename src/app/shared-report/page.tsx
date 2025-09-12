@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -33,7 +33,7 @@ interface SharedReport {
   claimsFound: number;
 }
 
-export default function SharedReportPage() {
+function SharedReportContent() {
   const searchParams = useSearchParams();
   const [report, setReport] = useState<SharedReport | null>(null);
   const [loading, setLoading] = useState(true);
@@ -360,5 +360,25 @@ export default function SharedReportPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function SharedReportLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading shared report...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function SharedReportPage() {
+  return (
+    <Suspense fallback={<SharedReportLoading />}>
+      <SharedReportContent />
+    </Suspense>
   );
 }
