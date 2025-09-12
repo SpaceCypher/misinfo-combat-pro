@@ -23,6 +23,228 @@ export default function Verifier() {
   const [dragActive, setDragActive] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  // Quick Actions functionality
+  const handleSaveAnalysis = async () => {
+    if (!results || !user) {
+      alert('Please complete an analysis first and ensure you are logged in.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Create a report object
+      const report = {
+        id: Date.now().toString(),
+        timestamp: new Date(),
+        type: activeTab,
+        content: activeTab === 'text' ? textInput : 
+                activeTab === 'url' ? urlInput : 
+                selectedFile?.name || 'Unknown content',
+        overallCredibility: results.overallCredibility,
+        claims: results.claims,
+        summary: results.summary || 'Analysis completed',
+        userId: user.uid,
+        analysisType: 'verification',
+        claimsFound: results.claimsFound || results.claims?.length || 0
+      };
+
+      // Save to localStorage for now (in a real app, this would go to Firestore)
+      const existingReports = JSON.parse(localStorage.getItem('verificationReports') || '[]');
+      existingReports.unshift(report);
+      
+      // Keep only the last 50 reports
+      if (existingReports.length > 50) {
+        existingReports.splice(50);
+      }
+      
+      localStorage.setItem('verificationReports', JSON.stringify(existingReports));
+      
+      // Navigate to reports page
+      window.location.href = '/reports';
+      
+    } catch (error) {
+      console.error('Error saving analysis:', error);
+      alert('Failed to save analysis. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleExportReport = async () => {
+    if (!results) {
+      alert('Please complete an analysis first.');
+      return;
+    }
+
+    setExporting(true);
+    try {
+      // Create detailed text report
+      let reportText = `VERIFICATION REPORT\n`;
+      reportText += `Generated: ${new Date().toLocaleString()}\n`;
+      reportText += `Content Type: ${activeTab.toUpperCase()}\n`;
+      reportText += `Overall Credibility: ${results.overallCredibility}\n\n`;
+
+      if (results.summary) {
+        reportText += `SUMMARY:\n${results.summary}\n\n`;
+      }
+
+      reportText += `CONTENT ANALYZED:\n`;
+      if (activeTab === 'text') {
+        reportText += `"${textInput}"\n\n`;
+      } else if (activeTab === 'url') {
+        reportText += `URL: ${urlInput}\n\n`;
+      } else if (selectedFile) {
+        reportText += `File: ${selectedFile.name} (${(selectedFile.size / 1024 / 1024).toFixed(2)} MB)\n\n`;
+      }
+
+      if (results.claims && results.claims.length > 0) {
+        reportText += `EXTRACTED CLAIMS (${results.claims.length} found):\n\n`;
+        
+        results.claims.forEach((claim: any, index: number) => {
+          reportText += `CLAIM ${index + 1}: ${claim.status?.toUpperCase() || 'UNKNOWN'}\n`;
+          reportText += `Text: "${claim.text}"\n`;
+          reportText += `Credibility: ${claim.confidence}%\n`;
+          
+          if (claim.type) {
+            reportText += `Type: ${claim.type}\n`;
+          }
+          
+          if (claim.priority) {
+            reportText += `Priority: ${claim.priority}\n`;
+          }
+
+          if (claim.explanation || claim.detailedExplanation) {
+            reportText += `Analysis: ${claim.detailedExplanation || claim.explanation}\n`;
+          }
+
+          if (claim.keyPoints && Array.isArray(claim.keyPoints) && claim.keyPoints.length > 0) {
+            reportText += `Key Points:\n`;
+            claim.keyPoints.forEach((point: string) => {
+              reportText += `  • ${point}\n`;
+            });
+          }
+
+          if (claim.keywords && Array.isArray(claim.keywords) && claim.keywords.length > 0) {
+            reportText += `Keywords: ${claim.keywords.join(', ')}\n`;
+          }
+
+          reportText += `\n`;
+        });
+
+        // Add consolidated sources
+        const allSources: any[] = [];
+        const seenLinks = new Set();
+        
+        results.claims.forEach((claim: any) => {
+          if (claim.webSources && Array.isArray(claim.webSources)) {
+            claim.webSources.forEach((source: any) => {
+              const link = source?.link;
+              if (link && !seenLinks.has(link)) {
+                seenLinks.add(link);
+                allSources.push(source);
+              }
+            });
+          }
+        });
+
+        if (allSources.length > 0) {
+          reportText += `SOURCES USED FOR VERIFICATION (${allSources.length} sources):\n\n`;
+          allSources.forEach((source: any, index: number) => {
+            reportText += `SOURCE ${index + 1}:\n`;
+            reportText += `Title: ${source.title || 'Untitled'}\n`;
+            reportText += `Source: ${source.source || 'Unknown'}\n`;
+            reportText += `Published: ${source.published || 'Unknown date'}\n`;
+            if (source.snippet) {
+              reportText += `Description: ${source.snippet}\n`;
+            }
+            if (source.link) {
+              reportText += `URL: ${source.link}\n`;
+            }
+            reportText += `\n`;
+          });
+        }
+      }
+
+      reportText += `\n---\nReport generated by MisInfo Combat Pro\nVerification Technology: AI-powered claim extraction and fact-checking`;
+
+      // Create and download the file
+      const blob = new Blob([reportText], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `verification-report-${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      alert('Failed to export report. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleShareResults = async () => {
+    if (!results || !user) {
+      alert('Please complete an analysis first and ensure you are logged in.');
+      return;
+    }
+
+    setSharing(true);
+    try {
+      // Create a unique share ID
+      const shareId = Date.now().toString();
+      
+      // Create a shareable report object with full data
+      const shareableReport = {
+        id: shareId,
+        timestamp: new Date(),
+        type: activeTab,
+        content: activeTab === 'text' ? textInput : 
+                activeTab === 'url' ? urlInput : 
+                selectedFile?.name || 'Unknown content',
+        overallCredibility: results.overallCredibility,
+        claims: results.claims || [],
+        summary: results.summary || 'Analysis completed',
+        claimsFound: results.claimsFound || results.claims?.length || 0,
+        sharedBy: user.displayName || user.email || 'Anonymous User',
+        sharedAt: new Date(),
+        analysisType: 'verification'
+      };
+
+      // Store in the sharedReports array
+      const existingSharedReports = JSON.parse(localStorage.getItem('sharedReports') || '[]');
+      existingSharedReports.unshift(shareableReport);
+      
+      // Keep only the last 100 shared reports
+      if (existingSharedReports.length > 100) {
+        existingSharedReports.splice(100);
+      }
+      
+      localStorage.setItem('sharedReports', JSON.stringify(existingSharedReports));
+
+      // Create shareable URL
+      const shareUrl = `${window.location.origin}/shared-report?id=${shareId}`;
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(shareUrl);
+      
+      // Show success message
+      alert(`Share link copied to clipboard!\n\nAnyone with this link can view the verification results:\n${shareUrl}`);
+      
+    } catch (error) {
+      console.error('Error sharing results:', error);
+      alert('Failed to create share link. Please try again.');
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -1386,17 +1608,29 @@ export default function Verifier() {
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>
                 <div className="space-y-3">
-                  <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  <button 
+                    onClick={handleExportReport}
+                    disabled={exporting}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
                     <Download className="w-4 h-4" />
-                    <span>Export Report</span>
+                    <span>{exporting ? 'Exporting...' : 'Export Report'}</span>
                   </button>
-                  <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                  <button 
+                    onClick={handleShareResults}
+                    disabled={sharing}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                  >
                     <Share2 className="w-4 h-4" />
-                    <span>Share Results</span>
+                    <span>{sharing ? 'Creating Link...' : 'Share Results'}</span>
                   </button>
-                  <button className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                  <button 
+                    onClick={handleSaveAnalysis}
+                    disabled={saving}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+                  >
                     <Save className="w-4 h-4" />
-                    <span>Save Analysis</span>
+                    <span>{saving ? 'Saving...' : 'Save Analysis'}</span>
                   </button>
                 </div>
               </div>
