@@ -1,4 +1,29 @@
+
 'use client';
+
+// Filter relevant web sources for this specific claim
+function getRelevantSources(claimText: string, allSources: any[]) {
+  if (!Array.isArray(allSources) || allSources.length === 0) return [];
+  const claimWords = claimText.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+  // Score each source by keyword overlap
+  const scored = allSources.map(source => {
+    const text = ((source.title || "") + " " + (source.snippet || "")).toLowerCase();
+    let score = 0;
+    for (const word of claimWords) {
+      if (text.includes(word)) score += 1;
+    }
+    return { source, score };
+  });
+  // Sort by score descending, then by original order
+  scored.sort((a, b) => b.score - a.score);
+  // Return all sources with the highest score (if >0), else just the first source
+  const maxScore = scored.length > 0 ? scored[0].score : 0;
+  if (maxScore > 0) {
+    return scored.filter(s => s.score === maxScore).map(s => s.source);
+  } else {
+    return allSources.slice(0, 1);
+  }
+}
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -551,96 +576,99 @@ export default function Verifier() {
                   return ["Analysis based on current scientific understanding"];
                 };
 
-                // Filter relevant web sources for this specific claim
-                const getRelevantSources = (claimText: string, allSources: any[]) => {
-                  if (!Array.isArray(allSources) || allSources.length === 0) return [];
-                  
-                  // For Great Wall claims, return Great Wall sources
-                  if (claimText.includes('great wall') || claimText.includes('scientists have shown')) {
-                    return allSources.filter(source => 
-                      source.title?.toLowerCase().includes('great wall') ||
-                      source.snippet?.toLowerCase().includes('great wall') ||
-                      source.snippet?.toLowerCase().includes('visible') ||
-                      source.snippet?.toLowerCase().includes('space')
-                    );
-                  }
-                  
-                  // For Amazon claims, look for Amazon/oxygen sources (may not exist in current results)
-                  if (claimText.includes('amazon') || claimText.includes('oxygen')) {
-                    return allSources.filter(source => 
-                      source.title?.toLowerCase().includes('amazon') ||
-                      source.title?.toLowerCase().includes('oxygen') ||
-                      source.snippet?.toLowerCase().includes('rainforest')
-                    );
-                  }
-                  
-                  // For Einstein claims, look for Nobel/Einstein sources
-                  if (claimText.includes('einstein') || claimText.includes('nobel')) {
-                    return allSources.filter(source => 
-                      source.title?.toLowerCase().includes('einstein') ||
-                      source.title?.toLowerCase().includes('nobel') ||
-                      source.snippet?.toLowerCase().includes('physics')
-                    );
-                  }
-                  
-                  // For other claims, return a subset or empty array
-                  return allSources.slice(0, 1); // Just first source as fallback
-                };
+
+
+// Filter relevant web sources for this specific claim
+function getRelevantSources(claimText: string, allSources: any[]) {
+  if (!Array.isArray(allSources) || allSources.length === 0) return [];
+  const claimWords = claimText.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+  // Score each source by keyword overlap
+  const scored = allSources.map(source => {
+    const text = ((source.title || "") + " " + (source.snippet || "")).toLowerCase();
+    let score = 0;
+    for (const word of claimWords) {
+      if (text.includes(word)) score += 1;
+    }
+    return { source, score };
+  });
+  // Sort by score descending, then by original order
+  scored.sort((a, b) => b.score - a.score);
+  // Return all sources with the highest score (if >0), else just the first source
+  const maxScore = scored.length > 0 ? scored[0].score : 0;
+  if (maxScore > 0) {
+    return scored.filter(s => s.score === maxScore).map(s => s.source);
+  } else {
+    return allSources.slice(0, 1);
+  }
+}
 
                 return {
                   id: index + 1,
                   text: claimObj.claim_text,
-                  status: (() => {
-                    // First check if API provided individual assessments
-                    if (data.individual_claim_assessments && Array.isArray(data.individual_claim_assessments)) {
-                      const apiAssessment = data.individual_claim_assessments.find(
-                        (assessment: any) => assessment.claim_text === claimObj.claim_text
-                      );
-                      if (apiAssessment) {
-                        return apiAssessment.verification_status || 'unverified';
-                      }
-                    }
-                    // Fallback to current logic if no API assessment available
-                    const claimConfidence = getClaimSpecificConfidence(claimObj.claim_text, data.credibility_score);
-                    return getClaimSpecificStatus(claimObj.claim_text, claimConfidence);
-                  })(),
-                  confidence: (() => {
-                    // First check if API provided individual assessments
-                    if (data.individual_claim_assessments && Array.isArray(data.individual_claim_assessments)) {
-                      const apiAssessment = data.individual_claim_assessments.find(
-                        (assessment: any) => assessment.claim_text === claimObj.claim_text
-                      );
-                      if (apiAssessment) {
-                        return apiAssessment.credibility_score || 50;
-                      }
-                    }
-                    // Fallback to current logic if no API assessment available
-                    return getClaimSpecificConfidence(claimObj.claim_text, data.credibility_score);
-                  })(),
-                  sources: getRelevantSources(claimText, data.search_results || []),
-                  explanation: (() => {
-                    // First check if API provided individual assessments
-                    if (data.individual_claim_assessments && Array.isArray(data.individual_claim_assessments)) {
-                      const apiAssessment = data.individual_claim_assessments.find(
-                        (assessment: any) => assessment.claim_text === claimObj.claim_text
-                      );
-                      if (apiAssessment && apiAssessment.assessment_reason) {
-                        return `${claimObj.claim_type} claim (${claimObj.priority} priority): ${apiAssessment.assessment_reason}`;
-                      }
-                    }
-                    // Fallback to current logic if no API assessment available
-                    return getClaimSpecificExplanation(claimObj, data.explanation);
-                  })(),
+                  // Always use individual_claim_assessments for per-claim status/confidence/explanation
+                  ...(data.individual_claim_assessments && Array.isArray(data.individual_claim_assessments)
+                    ? (() => {
+                        const apiAssessment = data.individual_claim_assessments.find(
+                          (assessment: any) => assessment.claim_text === claimObj.claim_text
+                        );
+                        return apiAssessment
+                          ? {
+                              status: apiAssessment.verification_status || 'unverified',
+                              confidence: apiAssessment.credibility_score ?? 50,
+                              explanation: `${claimObj.claim_type} claim (${claimObj.priority} priority): ${apiAssessment.assessment_reason}`,
+                              detailedExplanation: apiAssessment.assessment_reason || '',
+                            }
+                          : {
+                              status: getClaimSpecificStatus(claimObj.claim_text, data.credibility_score),
+                              confidence: getClaimSpecificConfidence(claimObj.claim_text, data.credibility_score),
+                              explanation: getClaimSpecificExplanation(claimObj, data.explanation),
+                              detailedExplanation: getClaimSpecificExplanation(claimObj, data.explanation),
+                            };
+                      })()
+                    : {
+                        status: getClaimSpecificStatus(claimObj.claim_text, data.credibility_score),
+                        confidence: getClaimSpecificConfidence(claimObj.claim_text, data.credibility_score),
+                        explanation: getClaimSpecificExplanation(claimObj, data.explanation),
+                        detailedExplanation: getClaimSpecificExplanation(claimObj, data.explanation),
+                      }),
                   type: claimObj.claim_type,
                   priority: claimObj.priority,
                   verifiable: claimObj.verifiable,
                   keywords: Array.isArray(claimObj.keywords) ? claimObj.keywords : [],
+                  // Get claim-specific sources from per_claim_sources if available
+                  webSources: (() => {
+                    // First try to get sources from per_claim_sources (new API)
+                    if (data.per_claim_sources && typeof data.per_claim_sources === 'object') {
+                      const claimSources = data.per_claim_sources[claimObj.claim_text];
+                      if (Array.isArray(claimSources) && claimSources.length > 0) {
+                        return claimSources;
+                      }
+                    }
+                    // Fallback to keyword matching from search_results (old method)
+                    return getRelevantSources(claimObj.claim_text, data.search_results || []);
+                  })(),
                   // Add claim-specific data
                   keyPoints: getClaimSpecificKeyPoints(claimText),
-                  webSources: getRelevantSources(claimText, data.search_results || []),
-                  hasWebSources: getRelevantSources(claimText, data.search_results || []).length > 0,
-                  sourcesFound: getRelevantSources(claimText, data.search_results || []).length,
-                  detailedExplanation: getClaimSpecificExplanation(claimObj, data.explanation)
+                  hasWebSources: (() => {
+                    // Check per_claim_sources first, then fallback
+                    if (data.per_claim_sources && typeof data.per_claim_sources === 'object') {
+                      const claimSources = data.per_claim_sources[claimObj.claim_text];
+                      if (Array.isArray(claimSources)) {
+                        return claimSources.length > 0;
+                      }
+                    }
+                    return getRelevantSources(claimObj.claim_text, data.search_results || []).length > 0;
+                  })(),
+                  sourcesFound: (() => {
+                    // Check per_claim_sources first, then fallback
+                    if (data.per_claim_sources && typeof data.per_claim_sources === 'object') {
+                      const claimSources = data.per_claim_sources[claimObj.claim_text];
+                      if (Array.isArray(claimSources)) {
+                        return claimSources.length;
+                      }
+                    }
+                    return getRelevantSources(claimObj.claim_text, data.search_results || []).length;
+                  })()
                 };
               });
               console.log('Successfully parsed structured claims:', claims.length);
@@ -1177,9 +1205,9 @@ export default function Verifier() {
                           </div>
                           <span className="text-sm text-gray-600">Credibility: {claim.confidence}%</span>
                         </div>
-                        
+
                         <p className="text-gray-800 mb-3 italic border-l-4 border-gray-300 pl-4">"{claim.text}"</p>
-                        
+
                         {claim.keywords && Array.isArray(claim.keywords) && claim.keywords.length > 0 && (
                           <div className="mb-3">
                             <p className="text-sm font-medium text-gray-700 mb-2">Key Terms:</p>
@@ -1206,19 +1234,65 @@ export default function Verifier() {
                             </div>
                           </div>
                         )}
-                        
+
                         {claim.detailedExplanation && typeof claim.detailedExplanation === 'string' && (
                           <div className="mb-3">
                             <p className="text-sm font-medium text-gray-700 mb-2">Analysis:</p>
                             <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">{claim.detailedExplanation}</p>
                           </div>
                         )}
+
+                        {/* Per-claim relevant sources */}
+                        {(() => {
+                          // Use the sources that were already resolved during transformation
+                          const sources = claim.webSources || [];
+                          
+                          return sources.length > 0 ? (
+                            <div className="mb-3">
+                              <p className="text-sm font-medium text-gray-700 mb-2">Relevant Sources:</p>
+                              <div className="space-y-2">
+                                {sources.map((source: any, idx: number) => {
+                                  const title = String(source?.title || 'Untitled Source');
+                                  const searchType = String(source?.search_type || 'Web Search');
+                                  const snippet = String(source?.snippet || 'No description available');
+                                  const sourceUrl = String(source?.source || 'Unknown');
+                                  const published = String(source?.published || 'Unknown date');
+                                  const link = source?.link ? String(source.link) : null;
+                                  return (
+                                    <div key={idx} className="bg-white border border-blue-100 rounded p-3">
+                                      <div className="flex items-start justify-between mb-1">
+                                        <span className="font-medium text-blue-900 text-sm leading-tight">{title}</span>
+                                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{searchType}</span>
+                                      </div>
+                                      <p className="text-xs text-blue-800 mb-1">{snippet}</p>
+                                      <div className="flex items-center justify-between text-xs text-blue-600">
+                                        <span><strong>Source:</strong> {sourceUrl}</span>
+                                        <span><strong>Published:</strong> {published}</span>
+                                      </div>
+                                      {link && (
+                                        <a 
+                                          href={link} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 mt-1 font-medium"
+                                        >
+                                          <ExternalLink className="w-3 h-3" />
+                                          <span>Visit Source</span>
+                                        </a>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ) : null;
+                        })()}
                       </div>
                     ))}
 
                     {/* Consolidated Sources Section - Show only once at the end */}
                     {(() => {
-                      // Collect all unique sources from all claims
+                      // Collect all unique sources from all claims (sources were already resolved during transformation)
                       const allSources: any[] = [];
                       const seenLinks = new Set();
                       

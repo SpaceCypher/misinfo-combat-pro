@@ -305,10 +305,11 @@ export default function Analyzer() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            AI-Powered Misinformation Analysis
+            AI-Powered Misinformation Pattern Detection
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Upload content or paste a URL to get instant analysis with detailed explanations of potential misinformation patterns.
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Advanced analysis to identify manipulation techniques, deceptive patterns, and misinformation methodologies. 
+            Get detailed insights into how content might be designed to mislead audiences.
           </p>
         </div>
 
@@ -457,7 +458,7 @@ export default function Analyzer() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-600"
               />
               <p className="text-gray-600">
-                Our AI will analyze the text for emotional manipulation, false statistics, and other misinformation patterns.
+                Our AI analyzes content for emotional manipulation, statistical fraud, false context, imposter content, and other sophisticated misinformation techniques.
               </p>
             </div>
           )}
@@ -516,14 +517,14 @@ export default function Analyzer() {
               </div>
 
             <div className="space-y-8">
-              {/* Risk Score */}
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+              {/* Misinformation Type & Pattern Detection */}
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-6 border border-red-200">
                 <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                  Risk Assessment
+                  <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                  Misinformation Pattern Analysis
                 </h3>
                 
-                {/* Score Display */}
+                {/* Pattern Type Display */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
                   <div className="flex items-center space-x-6 mb-4 lg:mb-0">
                     <div className="relative">
@@ -538,7 +539,7 @@ export default function Analyzer() {
                       </div>
                       <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
                         <span className="bg-white text-gray-700 text-xs font-medium px-2 py-1 rounded-full shadow border">
-                          /100
+                          Risk Score
                         </span>
                       </div>
                     </div>
@@ -555,21 +556,34 @@ export default function Analyzer() {
                       </div>
                       <div className="text-sm text-gray-700 font-medium">
                         {analysisResult.risk_score <= 30 
-                          ? 'Low risk of misinformation' 
+                          ? 'No significant misinformation patterns detected' 
                           : analysisResult.risk_score <= 70 
-                          ? 'Moderate risk detected'
-                          : 'High risk of misinformation'
+                          ? 'Moderate misinformation risk - potential manipulation detected'
+                          : 'High misinformation risk - multiple deceptive techniques identified'
                         }
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="space-y-3">
+                {/* Pattern Explanation */}
+                <div className="bg-white rounded-lg p-4 border border-red-100">
+                  <h4 className="font-semibold text-gray-900 mb-2">Detected Pattern Type:</h4>
+                  <p className="text-gray-700 text-sm">
+                    {analysisResult.risk_score <= 30 
+                      ? 'Content appears to be factual with no significant manipulation techniques detected. Information seems to be presented objectively without emotional manipulation or deceptive framing.'
+                      : analysisResult.risk_score <= 70 
+                      ? 'Moderate risk content with some potential manipulation techniques. May contain emotional appeals, selective information presentation, or misleading context that could influence opinion.'
+                      : 'High risk content containing multiple misinformation techniques such as emotional manipulation, false context, statistical fraud, or imposter content designed to deceive audiences.'
+                    }
+                  </p>
+                </div>
+
+                {/* Risk Level Indicators */}
+                <div className="space-y-3 mt-4">
                   <div className="flex justify-between text-sm text-gray-700 font-medium">
-                    <span>Risk Level</span>
-                    <span className="font-semibold">{analysisResult.risk_score}% Risk Score</span>
+                    <span>Misinformation Risk Level</span>
+                    <span className="font-semibold">{analysisResult.risk_score}/100</span>
                   </div>
                   <div className="relative">
                     <div className="w-full bg-gray-300 rounded-full h-4 shadow-inner">
@@ -588,28 +602,65 @@ export default function Analyzer() {
                     <div className="flex justify-between mt-2 text-xs text-gray-600 font-medium">
                       <span className="flex flex-col items-center">
                         <div className="w-1 h-2 bg-green-400 rounded-full mb-1"></div>
-                        Low
+                        Reliable
                       </span>
                       <span className="flex flex-col items-center">
                         <div className="w-1 h-2 bg-yellow-400 rounded-full mb-1"></div>
-                        Medium
+                        Suspicious
                       </span>
                       <span className="flex flex-col items-center">
                         <div className="w-1 h-2 bg-red-400 rounded-full mb-1"></div>
-                        High
+                        Deceptive
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Detailed Analysis */}
+              {/* Misinformation Techniques Breakdown */}
               <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                 <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                   <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                  Detailed Analysis
+                  General Manipulation Techniques
                 </h3>
+                
+                {/* Technique Categories */}
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-red-50 rounded-lg p-4 border border-red-100">
+                    <h4 className="font-semibold text-red-900 mb-2 flex items-center">
+                      <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                      Emotional Manipulation
+                    </h4>
+                    <p className="text-red-800 text-sm">Appeals to fear, anger, or other emotions to bypass rational thinking</p>
+                  </div>
+                  
+                  <div className="bg-orange-50 rounded-lg p-4 border border-orange-100">
+                    <h4 className="font-semibold text-orange-900 mb-2 flex items-center">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full mr-2"></div>
+                      Statistical Fraud
+                    </h4>
+                    <p className="text-orange-800 text-sm">Misleading use of numbers, charts, or data to support false claims</p>
+                  </div>
+                  
+                  <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
+                    <h4 className="font-semibold text-yellow-900 mb-2 flex items-center">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                      False Context
+                    </h4>
+                    <p className="text-yellow-800 text-sm">Real information presented in misleading or incorrect context</p>
+                  </div>
+                  
+                  <div className="bg-purple-50 rounded-lg p-4 border border-purple-100">
+                    <h4 className="font-semibold text-purple-900 mb-2 flex items-center">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                      Imposter Content
+                    </h4>
+                    <p className="text-purple-800 text-sm">Content impersonating legitimate sources or authorities</p>
+                  </div>
+                </div>
+
                 <div className="bg-gray-50 rounded-lg p-6 border border-gray-100">
+                  <h4 className="font-semibold text-gray-900 mb-3">Detailed Pattern Analysis:</h4>
                   <div 
                     className="text-gray-800 leading-relaxed prose max-w-none prose-headings:text-gray-900 prose-headings:font-semibold prose-p:mb-4 prose-ul:my-4 prose-li:mb-2 prose-strong:text-gray-900 prose-p:text-gray-800"
                     dangerouslySetInnerHTML={{ __html: analysisResult.explanation_html }}
@@ -617,19 +668,89 @@ export default function Analyzer() {
                 </div>
               </div>
 
-              {/* Sources Section */}
+              {/* Content Breakdown Analysis */}
+              <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                  Content Structure & Methodology
+                </h3>
+                
+                <div className="grid md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                    <h4 className="font-semibold text-blue-900 mb-2">Language Analysis</h4>
+                    <p className="text-blue-800 text-sm">Examining word choice, tone, and persuasive techniques</p>
+                  </div>
+                  
+                  <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+                    <h4 className="font-semibold text-indigo-900 mb-2">Logical Structure</h4>
+                    <p className="text-indigo-800 text-sm">Evaluating argument flow and reasoning patterns</p>
+                  </div>
+                  
+                  <div className="bg-cyan-50 rounded-lg p-4 border border-cyan-100">
+                    <h4 className="font-semibold text-cyan-900 mb-2">Source Claims</h4>
+                    <p className="text-cyan-800 text-sm">Analyzing credibility and verifiability of cited sources</p>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <h4 className="font-semibold text-gray-900 mb-3">How This Content Could Mislead:</h4>
+                  <ul className="space-y-2 text-gray-700 text-sm">
+                    {analysisResult.risk_score > 70 ? (
+                      <>
+                        <li className="flex items-start space-x-2">
+                          <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+                          <span>Uses strong emotional appeals that may bypass critical thinking</span>
+                        </li>
+                        <li className="flex items-start space-x-2">
+                          <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+                          <span>Presents information without proper context or verification</span>
+                        </li>
+                        <li className="flex items-start space-x-2">
+                          <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+                          <span>May contain misleading statistics or false correlations</span>
+                        </li>
+                      </>
+                    ) : analysisResult.risk_score > 30 ? (
+                      <>
+                        <li className="flex items-start space-x-2">
+                          <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 flex-shrink-0"></div>
+                          <span>Contains some persuasive elements that could influence opinion</span>
+                        </li>
+                        <li className="flex items-start space-x-2">
+                          <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 flex-shrink-0"></div>
+                          <span>May present selective information or incomplete context</span>
+                        </li>
+                      </>
+                    ) : (
+                      <li className="flex items-start space-x-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>Content appears to be presented objectively without significant manipulation techniques</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Research Sources Section */}
               {analysisResult.sources && analysisResult.sources.length > 0 && (
                 <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                   <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                    Sources & References
+                    <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                    Research Sources & Context
                   </h3>
+                  <div className="bg-green-50 rounded-lg p-4 border border-green-100 mb-4">
+                    <p className="text-green-800 text-sm">
+                      <strong>Research Context:</strong> These sources were consulted during our analysis to understand 
+                      the broader context around the content's claims and to identify potential misinformation patterns. 
+                      They represent what reliable information is available on related topics.
+                    </p>
+                  </div>
                   <div className="space-y-4">
                     {analysisResult.sources.map((source, index) => (
                       <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-100 hover:border-gray-200 transition-colors">
                         <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-blue-600 font-semibold text-sm">{index + 1}</span>
+                          <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <span className="text-green-600 font-semibold text-sm">{index + 1}</span>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2 mb-2">
@@ -638,7 +759,7 @@ export default function Analyzer() {
                                   href={source.link} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
-                                  className="hover:text-blue-600 transition-colors"
+                                  className="hover:text-green-600 transition-colors"
                                 >
                                   {source.title}
                                 </a>
@@ -655,15 +776,22 @@ export default function Analyzer() {
                                 href={source.link} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                                className="text-xs text-green-600 hover:text-green-800 font-medium transition-colors"
                               >
-                                View Source →
+                                Research Source →
                               </a>
                             </div>
                           </div>
                         </div>
                       </div>
                     ))}
+                  </div>
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-blue-800 text-xs">
+                      <strong>Note:</strong> These sources help establish context for identifying misinformation patterns. 
+                      They are not necessarily direct fact-checks of the analyzed content, but rather provide background 
+                      information that helps detect manipulation techniques and assess credibility.
+                    </p>
                   </div>
                 </div>
               )}
@@ -707,44 +835,57 @@ export default function Analyzer() {
           {/* Right Column - Analysis Cards (1/3 width) */}
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Analysis Tools</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Misinformation Detection</h2>
               
-              {/* Text Analysis Card */}
+              {/* Pattern Recognition Card */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-blue-600" />
+                  <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                    <AlertTriangle className="w-6 h-6 text-red-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 ml-4">Text Analysis</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 ml-4">Pattern Recognition</h3>
                 </div>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Detects emotional manipulation, false statistics, and misleading language patterns
+                  Identifies emotional manipulation, false context, statistical fraud, and other deceptive techniques
                 </p>
               </div>
 
-              {/* Image Verification Card */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Image className="w-6 h-6 text-green-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 ml-4">Image Verification</h3>
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  Identifies manipulated images, deepfakes, and visual inconsistencies
-                </p>
-              </div>
-
-              {/* Video Analysis Card */}
+              {/* Content Analysis Card */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Video className="w-6 h-6 text-purple-600" />
+                    <FileText className="w-6 h-6 text-purple-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 ml-4">Video Analysis</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 ml-4">Content Structure</h3>
                 </div>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Detects video manipulation, deepfakes, and suspicious editing patterns
+                  Analyzes language patterns, logical flow, and persuasive techniques used in the content
+                </p>
+              </div>
+
+              {/* Methodology Detection Card */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Shield className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 ml-4">Methodology Detection</h3>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Identifies specific misinformation methodologies and explains how they work to mislead audiences
+                </p>
+              </div>
+
+              {/* Risk Assessment Card */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 ml-4">Risk Assessment</h3>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Provides overall risk scoring and explanations of potential harm from identified patterns
                 </p>
               </div>
             </div>
