@@ -30,6 +30,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Shield, ArrowLeft, Search, FileText, Link as LinkIcon, CheckCircle, XCircle, AlertCircle, ExternalLink, Upload, Image, Video, Play, Download, Share2, Save } from 'lucide-react';
 import { useAuth } from '@/lib/simple-auth-context';
+import { TrainingDatabase } from '@/lib/training-db';
 
 export default function Verifier() {
   const { user, logout } = useAuth();
@@ -359,6 +360,31 @@ export default function Verifier() {
                               selectedFile?.name || '';
       const transformedResults = transformApiResults(data, activeTab, currentInputText);
       setResults(transformedResults);
+      
+      // Award points for verification activity
+      if (user && transformedResults && !transformedResults.error) {
+        try {
+          // Calculate accuracy score based on credibility
+          let accuracyScore = 0.5; // Default accuracy
+          
+          if (transformedResults.overallCredibility) {
+            const credibilityMatch = transformedResults.overallCredibility.match(/(\d+)%/);
+            if (credibilityMatch) {
+              const credibilityPercent = parseInt(credibilityMatch[1]);
+              accuracyScore = credibilityPercent / 100;
+            }
+          }
+          
+          await TrainingDatabase.recordVerifierActivity(
+            user.uid,
+            transformedResults.claims?.length || 1,
+            accuracyScore
+          );
+        } catch (pointsError) {
+          console.error('Error awarding points:', pointsError);
+          // Don't fail the whole verification if points fail
+        }
+      }
       
     } catch (error) {
       console.error('Verification error:', error);

@@ -7,6 +7,7 @@ import NextImage from 'next/image';
 import { Shield, Upload, FileText, Image, Video, Link as LinkIcon, ArrowLeft, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/simple-auth-context';
 import { saveAnalysis } from '@/lib/analysis-service';
+import { TrainingDatabase } from '@/lib/training-db';
 
 export default function Analyzer() {
   const { user, logout } = useAuth();
@@ -134,6 +135,22 @@ export default function Analyzer() {
       }
 
       setAnalysisResult(result);
+      
+      // Award points for analysis
+      if (user?.uid) {
+        try {
+          const analysisAccuracy = (100 - result.risk_score) / 100; // Convert risk score to accuracy
+          await TrainingDatabase.recordAnalyzerActivity(
+            user.uid, 
+            activeTab, 
+            analysisAccuracy
+          );
+          console.log('Points awarded for analysis activity');
+        } catch (error) {
+          console.error('Failed to award points:', error);
+          // Continue execution even if points fail
+        }
+      }
       
       // Save to analysis history in Firestore
       if (user?.uid) {
@@ -519,27 +536,31 @@ export default function Analyzer() {
                 </h3>
                 
                 {/* Pattern Type Display */}
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
-                  <div className="flex items-center space-x-6 mb-4 lg:mb-0">
-                    <div className="relative">
-                      <div className={`w-24 h-24 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg ${
-                        analysisResult.risk_score <= 30 
-                          ? 'bg-gradient-to-br from-green-400 to-green-600' 
-                          : analysisResult.risk_score <= 70 
-                          ? 'bg-gradient-to-br from-yellow-400 to-yellow-600'
-                          : 'bg-gradient-to-br from-red-400 to-red-600'
-                      }`}>
-                        {analysisResult.risk_score}
-                      </div>
-                      <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                        <span className="bg-white text-gray-700 text-xs font-medium px-2 py-1 rounded-full shadow border">
-                          Risk Score
-                        </span>
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-6 mb-4 lg:mb-0">
+                    {/* Risk Score Circle */}
+                    <div className="flex flex-col items-center lg:items-start">
+                      <div className="relative">
+                        <div className={`w-20 h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-white font-bold text-lg lg:text-xl shadow-lg ${
+                          analysisResult.risk_score <= 30 
+                            ? 'bg-gradient-to-br from-green-400 to-green-600' 
+                            : analysisResult.risk_score <= 70 
+                            ? 'bg-gradient-to-br from-yellow-400 to-yellow-600'
+                            : 'bg-gradient-to-br from-red-400 to-red-600'
+                        }`}>
+                          {analysisResult.risk_score}
+                        </div>
+                        <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                          <span className="bg-white text-gray-700 text-xs font-medium px-2 py-1 rounded-full shadow border">
+                            Risk Score
+                          </span>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <div className={`inline-flex px-4 py-2 rounded-lg text-base font-semibold shadow-sm ${
+                    {/* Pattern Info */}
+                    <div className="flex-1 space-y-3 text-center lg:text-left">
+                      <div className={`inline-flex px-4 py-2 rounded-lg text-sm lg:text-base font-semibold shadow-sm ${
                         analysisResult.risk_score <= 30 
                           ? 'bg-green-100 text-green-800 border border-green-200' 
                           : analysisResult.risk_score <= 70 
@@ -574,10 +595,10 @@ export default function Analyzer() {
                 </div>
 
                 {/* Risk Level Indicators */}
-                <div className="space-y-3 mt-4">
-                  <div className="flex justify-between text-sm text-gray-700 font-medium">
+                <div className="space-y-4 mt-6">
+                  <div className="flex justify-between items-center text-sm text-gray-700 font-medium">
                     <span>Misinformation Risk Level</span>
-                    <span className="font-semibold">{analysisResult.risk_score}/100</span>
+                    <span className="font-semibold text-lg">{analysisResult.risk_score}/100</span>
                   </div>
                   <div className="relative">
                     <div className="w-full bg-gray-300 rounded-full h-4 shadow-inner">
@@ -593,7 +614,7 @@ export default function Analyzer() {
                       ></div>
                     </div>
                     {/* Risk level markers */}
-                    <div className="flex justify-between mt-2 text-xs text-gray-600 font-medium">
+                    <div className="flex justify-between mt-3 text-xs text-gray-600 font-medium">
                       <span className="flex flex-col items-center">
                         <div className="w-1 h-2 bg-green-400 rounded-full mb-1"></div>
                         Reliable

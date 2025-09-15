@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/simple-auth-context';
 import Link from 'next/link';
 import ProtectedRoute from '@/components/protected-route';
+import { TrainingDatabase, UserProfileManager } from '@/lib/training-db';
+import type { UserProfile } from '@/lib/training-db';
 import {
   Shield, User, Mail, Calendar, ArrowLeft, Edit,
   BarChart3, Target, Clock, Award, Bell, Globe,
   Lock, Eye, Download, FileText, Image, Video,
-  ChevronRight, Settings, X, Save, Camera
+  ChevronRight, Settings, X, Save, Camera, Trophy
 } from 'lucide-react';
 
 function ProfileContent() {
@@ -19,16 +21,57 @@ function ProfileContent() {
   const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
   
   // Reset image error when user changes
   useEffect(() => {
     setImageError(false);
   }, [user?.photoURL]);
+
+  // Load user profile data
+  useEffect(() => {
+    async function loadUserProfile() {
+      if (!user?.uid) return;
+      
+      try {
+        setLoading(true);
+        let profile = await TrainingDatabase.getUserFullProfile(user.uid);
+        
+        // Initialize profile if it doesn't exist
+        if (!profile) {
+          const profileData: {
+            email: string;
+            displayName: string;
+            photoURL?: string;
+          } = {
+            email: user.email || '',
+            displayName: user.displayName || user.email?.split('@')[0] || 'User'
+          };
+          
+          // Only include photoURL if it exists and is not empty
+          if (user.photoURL) {
+            profileData.photoURL = user.photoURL;
+          }
+          
+          profile = await TrainingDatabase.initializeUserProfile(user.uid, profileData);
+        }
+        
+        setUserProfile(profile);
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadUserProfile();
+  }, [user]);
   
   const [editForm, setEditForm] = useState({
-    displayName: user?.displayName || 'Sanidhya Kumar',
-    bio: 'Student & Fact Checker',
-    location: 'Mumbai, India',
+    displayName: '',
+    bio: '',
+    location: '',
     website: '',
     twitter: '',
     linkedin: '',
@@ -40,32 +83,40 @@ function ProfileContent() {
     language: 'English'
   });
 
+  // Update edit form when user profile loads
+  useEffect(() => {
+    if (userProfile) {
+      setEditForm({
+        displayName: userProfile.displayName,
+        bio: userProfile.bio || '',
+        location: userProfile.location || '',
+        website: userProfile.website || '',
+        twitter: userProfile.socialLinks?.twitter || '',
+        linkedin: userProfile.socialLinks?.linkedin || '',
+        emailNotifications: userProfile.preferences?.emailNotifications ?? true,
+        weeklyReports: userProfile.preferences?.weeklyReports ?? true,
+        smsAlerts: userProfile.preferences?.smsAlerts ?? false,
+        publicProfile: userProfile.preferences?.publicProfile ?? true,
+        shareAchievements: userProfile.preferences?.shareAchievements ?? false,
+        language: userProfile.preferences?.language || 'English'
+      });
+    }
+  }, [userProfile]);
+
   if (!user) {
     return null;
   }
 
-  const mockStats = {
-    totalAnalyses: 247,
-    accuracyRate: 87,
-    dayStreak: 15,
-    weeklyAnalyses: 23,
-    trainingTime: '2h 45m',
-    accuracyScore: 91,
-    weekRank: 47
-  };
-
-  const mockHistory = [
-    { type: 'News Article Analysis', date: 'Monday 28, 2025 • 7:30 PM', risk: 67, riskLabel: 'Risk' },
-    { type: 'Social Media Image', date: 'January 27, 2025 • 4:15 PM', risk: 23, riskLabel: 'Risk' },
-    { type: 'Video Content Check', date: 'January 26, 2025 • 11:20 AM', risk: 89, riskLabel: 'Risk' }
-  ];
-
-  const achievements = [
-    { name: 'First Analysis', icon: '🔍', earned: true },
-    { name: 'Week Streak', icon: '🔥', earned: true },
-    { name: 'Module Master', icon: '🏆', earned: true },
-    { name: 'Accuracy Expert', icon: '⭐', earned: false }
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleEditFormChange = (field: string, value: string | boolean) => {
     setEditForm(prev => ({
@@ -74,11 +125,44 @@ function ProfileContent() {
     }));
   };
 
-  const handleSaveProfile = () => {
-    // Here you would typically save to your backend/Firebase
-    console.log('Saving profile:', editForm);
-    setIsEditPanelOpen(false);
-    // You could show a success toast here
+  const handleSaveProfile = async () => {
+    if (!user?.uid || !userProfile) return;
+    
+    try {
+      const updates: Partial<UserProfile> = {
+        displayName: editForm.displayName,
+        bio: editForm.bio,
+        location: editForm.location,
+        website: editForm.website,
+        socialLinks: {
+          twitter: editForm.twitter,
+          linkedin: editForm.linkedin,
+          instagram: userProfile.socialLinks?.instagram || '',
+          github: userProfile.socialLinks?.github || ''
+        },
+        preferences: {
+          emailNotifications: editForm.emailNotifications,
+          weeklyReports: editForm.weeklyReports,
+          smsAlerts: editForm.smsAlerts,
+          publicProfile: editForm.publicProfile,
+          shareAchievements: editForm.shareAchievements,
+          language: editForm.language,
+          theme: userProfile.preferences?.theme || 'light'
+        }
+      };
+      
+      await UserProfileManager.updateUserProfile(user.uid, updates);
+      
+      // Update local state
+      setUserProfile(prev => prev ? { ...prev, ...updates } : null);
+      setIsEditPanelOpen(false);
+      
+      // You could show a success toast here
+      console.log('Profile updated successfully');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      // You could show an error toast here
+    }
   };
 
   return (
@@ -134,7 +218,9 @@ function ProfileContent() {
                   <span className="text-sm font-medium text-blue-600">
                     {user?.displayName || user?.email?.split('@')[0] || 'User'}
                   </span>
-                  <span className="text-xs text-blue-500">Level 3 • Profile</span>
+                  <span className="text-xs text-blue-500">
+                    Level {userProfile?.level || 1} • Profile
+                  </span>
                 </div>
                 <div className="w-8 h-8 rounded-full overflow-hidden">
                   {user?.photoURL && !imageError ? (
@@ -202,16 +288,64 @@ function ProfileContent() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-8 h-8 text-gray-400" />
+                  <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+                    {(user?.photoURL || userProfile?.photoURL) && !imageError ? (
+                      <img 
+                        src={`/api/proxy-image?url=${encodeURIComponent(user?.photoURL || userProfile?.photoURL || '')}`}
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.log('Profile main: Proxy image failed, trying direct URL:', user?.photoURL);
+                          e.currentTarget.src = (user?.photoURL || userProfile?.photoURL) || '';
+                          e.currentTarget.onerror = () => {
+                            console.log('Profile main: Direct URL also failed');
+                            setImageError(true);
+                          };
+                        }}
+                        onLoad={() => console.log('Profile main: Image loaded successfully')}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-white text-lg font-semibold">
+                          {(userProfile?.displayName || user?.displayName) ? 
+                            (userProfile?.displayName || user?.displayName)!.split(' ').map(n => n[0]).join('').toUpperCase() : 
+                            (user?.email?.[0]?.toUpperCase() || 'U')
+                          }
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="min-w-0">
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                      {user.displayName || 'Sanidhya Kumar'}
+                      {userProfile?.displayName || user.displayName || 'User'}
                     </h1>
-                    <p className="text-gray-600">Student & Fact Checker</p>
+                    <p className="text-gray-600">{userProfile?.bio || 'No bio provided'}</p>
                     <p className="text-sm text-gray-700">
-                      📅 Joined September 2025 • 📍 Mumbai, India
+                      📅 Joined {(() => {
+                        try {
+                          if (userProfile?.joinedDate) {
+                            const date = userProfile.joinedDate instanceof Date 
+                              ? userProfile.joinedDate 
+                              : new Date(userProfile.joinedDate);
+                            
+                            if (isNaN(date.getTime())) {
+                              return 'Recently';
+                            }
+                            
+                            return date.toLocaleDateString('en-IN', {
+                              year: 'numeric',
+                              month: 'long'
+                            });
+                          }
+                          return 'Recently';
+                        } catch (error) {
+                          console.error('Error formatting date:', error);
+                          return 'Recently';
+                        }
+                      })()} • 
+                      📍 {userProfile?.location || 'Location not specified'} •
+                      🏆 Level {userProfile?.level || 1} •
+                      ⭐ {userProfile?.totalPoints || 0} points
                     </p>
                   </div>
                 </div>
@@ -254,17 +388,22 @@ function ProfileContent() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6">
                     <div className="text-center">
                       <BarChart3 className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-gray-900">{mockStats.totalAnalyses}</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {(userProfile?.analyzerStats.totalAnalyses || 0) + 
+                         (userProfile?.verifierStats.totalVerifications || 0)}
+                      </div>
                       <div className="text-sm text-gray-600">Total Analyses</div>
                     </div>
                     <div className="text-center">
                       <Target className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-gray-900">{mockStats.accuracyRate}%</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {Math.round(userProfile?.trainingStats.averageAccuracy || 0)}%
+                      </div>
                       <div className="text-sm text-gray-600">Accuracy Rate</div>
                     </div>
                     <div className="text-center">
                       <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-gray-900">{mockStats.dayStreak}</div>
+                      <div className="text-2xl font-bold text-gray-900">{userProfile?.streakDays || 0}</div>
                       <div className="text-sm text-gray-600">Day Streak</div>
                     </div>
                   </div>
@@ -280,35 +419,35 @@ function ProfileContent() {
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Training Progress</h2>
 
                   <div className="mb-6">
-                    <h3 className="text-sm font-medium text-gray-700 mb-4">Completed Modules</h3>
+                    <h3 className="text-sm font-medium text-gray-700 mb-4">Training Progress</h3>
 
                     <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium text-gray-900">Beginner Detection</span>
-                          <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">COMPLETED</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className="bg-green-500 h-2 rounded-full" style={{ width: '100%' }}></div>
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-700 mt-1">
-                          <span>12/12 lessons</span>
-                          <span>100%</span>
-                        </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-900">Modules Completed</span>
+                        <span className="text-lg font-bold text-blue-600">
+                          {userProfile?.completedModules.length || 0}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-900">Skill Level</span>
+                        <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full capitalize">
+                          {userProfile?.skillLevel || 'Beginner'}
+                        </span>
                       </div>
 
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium text-gray-900">Intermediate Analysis</span>
-                          <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">IN PROGRESS</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className="bg-blue-500 h-2 rounded-full" style={{ width: '75%' }}></div>
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-700 mt-1">
-                          <span>9/12 lessons</span>
-                          <span>75%</span>
-                        </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-900">Training Time</span>
+                        <span className="text-sm text-gray-600">
+                          {Math.floor((userProfile?.trainingStats.totalTimeSpent || 0) / 60)}h {Math.floor((userProfile?.trainingStats.totalTimeSpent || 0) % 60)}m
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-900">Perfect Scores</span>
+                        <span className="text-sm text-gray-600">
+                          {userProfile?.trainingStats.perfectScores || 0}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -316,47 +455,37 @@ function ProfileContent() {
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 mb-4">Achievements Earned</h3>
                     <div className="flex flex-wrap gap-4 sm:space-x-4">
-                      {achievements.map((achievement, index) => (
-                        <div key={index} className={`text-center flex-shrink-0 ${achievement.earned ? 'opacity-100' : 'opacity-40'}`}>
-                          <div className="text-2xl mb-1">{achievement.icon}</div>
-                          <div className="text-xs text-gray-600 whitespace-nowrap">{achievement.name}</div>
+                      {userProfile?.achievements && userProfile.achievements.length > 0 ? (
+                        userProfile.achievements.map((achievement, index) => (
+                          <div key={index} className="text-center flex-shrink-0">
+                            <div className="text-2xl mb-1">{achievement.icon}</div>
+                            <div className="text-xs text-gray-600 whitespace-nowrap">{achievement.name}</div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(achievement.unlockedAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          <Trophy className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                          <p className="text-sm">No achievements yet</p>
+                          <p className="text-xs">Complete modules to earn your first achievement!</p>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Analysis History */}
+                {/* Recent Activity */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-2">
-                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Analysis History</h2>
-                    <button className="text-blue-600 hover:text-blue-700 text-sm self-start sm:self-auto">View All History</button>
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Recent Activity</h2>
                   </div>
 
-                  <div className="space-y-4">
-                    {mockHistory.map((item, index) => (
-                      <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 gap-3 sm:gap-0">
-                        <div className="flex items-center space-x-3 min-w-0 flex-1">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            {item.type.includes('News') && <FileText className="w-5 h-5 text-gray-600" />}
-                            {item.type.includes('Image') && <Image className="w-5 h-5 text-gray-600" />}
-                            {item.type.includes('Video') && <Video className="w-5 h-5 text-gray-600" />}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium text-gray-900 truncate">{item.type}</div>
-                            <div className="text-sm text-gray-700 truncate">{item.date}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between sm:justify-end space-x-2 flex-shrink-0">
-                          <span className={`text-sm font-medium ${item.risk > 70 ? 'text-red-600' :
-                            item.risk > 40 ? 'text-yellow-600' : 'text-green-600'
-                            }`}>
-                            {item.risk}% {item.riskLabel}
-                          </span>
-                          <ChevronRight className="w-4 h-4 text-gray-400" />
-                        </div>
-                      </div>
-                    ))}
+                  <div className="text-center py-8 text-gray-500">
+                    <BarChart3 className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                    <p className="text-sm">No recent activity</p>
+                    <p className="text-xs">Start training, analyzing, or verifying content to see your activity here!</p>
                   </div>
                 </div>
               </>
@@ -521,24 +650,32 @@ function ProfileContent() {
 
             {/* This Week Stats */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">This Week</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Gamification Stats</h3>
 
               <div className="space-y-4">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Analyses completed</span>
-                  <span className="text-gray-600 font-semibold">{mockStats.weeklyAnalyses}</span>
+                  <span className="text-gray-600">Total Points</span>
+                  <span className="text-gray-600 font-semibold">{userProfile?.totalPoints || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Training time</span>
-                  <span className="text-gray-600 font-semibold">{mockStats.trainingTime}</span>
+                  <span className="text-gray-600">Training Points</span>
+                  <span className="text-gray-600 font-semibold">{userProfile?.trainingStats.pointsEarned || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Accuracy score</span>
-                  <span className="text-gray-600 font-semibold">{mockStats.accuracyScore}%</span>
+                  <span className="text-gray-600">Analyzer Points</span>
+                  <span className="text-gray-600 font-semibold">{userProfile?.analyzerStats.pointsEarned || 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Rank this week</span>
-                  <span className="text-gray-600 font-semibold">#{mockStats.weekRank}</span>
+                  <span className="text-gray-600">Verifier Points</span>
+                  <span className="text-gray-600 font-semibold">{userProfile?.verifierStats.pointsEarned || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Current Level</span>
+                  <span className="text-gray-600 font-semibold">Level {userProfile?.level || 1}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Points to Next Level</span>
+                  <span className="text-gray-600 font-semibold">{userProfile?.pointsToNextLevel || 100}</span>
                 </div>
               </div>
             </div>
@@ -573,14 +710,42 @@ function ProfileContent() {
               {/* Profile Photo Section */}
               <div className="text-center">
                 <div className="relative inline-block">
-                  <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <User className="w-12 h-12 text-gray-400" />
+                  <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4">
+                    {(user?.photoURL || userProfile?.photoURL) && !imageError ? (
+                      <img 
+                        src={`/api/proxy-image?url=${encodeURIComponent(user?.photoURL || userProfile?.photoURL || '')}`}
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.log('Profile edit: Proxy image failed, trying direct URL');
+                          e.currentTarget.src = (user?.photoURL || userProfile?.photoURL) || '';
+                          e.currentTarget.onerror = () => {
+                            console.log('Profile edit: Direct URL also failed');
+                            setImageError(true);
+                          };
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-white text-xl font-semibold">
+                          {(userProfile?.displayName || user?.displayName) ? 
+                            (userProfile?.displayName || user?.displayName)!.split(' ').map(n => n[0]).join('').toUpperCase() : 
+                            (user?.email?.[0]?.toUpperCase() || 'U')
+                          }
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <button className="absolute bottom-4 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors">
+                  <button 
+                    type="button"
+                    className="absolute bottom-4 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
+                    title="Change profile photo"
+                  >
                     <Camera className="w-4 h-4" />
                   </button>
                 </div>
-                <p className="text-sm text-gray-600">Click to change profile photo</p>
+                <p className="text-sm text-gray-600">Profile photo from your account provider</p>
+                <p className="text-xs text-gray-500 mt-1">Change your photo in your Google/provider account settings</p>
               </div>
 
               {/* Basic Information */}

@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/simple-auth-context';
 import Link from 'next/link';
 import ProtectedRoute from '@/components/protected-route';
+import Leaderboard from '@/components/Leaderboard';
+import { TrainingDatabase, UserProfileManager } from '@/lib/training-db';
+import type { UserProfile } from '@/lib/training-db';
 import { 
   Shield, Brain, Search, Upload, TrendingUp, Clock, LogOut, User, 
   BarChart3, GraduationCap, CheckCircle, Star, Award, Target,
@@ -16,11 +19,52 @@ function DashboardContent() {
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Reset image error when user changes
   useEffect(() => {
     setImageError(false);
   }, [user?.photoURL]);
+
+  // Load user profile data
+  useEffect(() => {
+    async function loadUserProfile() {
+      if (!user?.uid) return;
+      
+      try {
+        setLoading(true);
+        let profile = await TrainingDatabase.getUserFullProfile(user.uid);
+        
+        // Initialize profile if it doesn't exist
+        if (!profile) {
+          const profileData: {
+            email: string;
+            displayName: string;
+            photoURL?: string;
+          } = {
+            email: user.email || '',
+            displayName: user.displayName || user.email?.split('@')[0] || 'User'
+          };
+          
+          // Only include photoURL if it exists and is not empty
+          if (user.photoURL) {
+            profileData.photoURL = user.photoURL;
+          }
+          
+          profile = await TrainingDatabase.initializeUserProfile(user.uid, profileData);
+        }
+        
+        setUserProfile(profile);
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadUserProfile();
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -36,6 +80,17 @@ function DashboardContent() {
     month: 'long',
     day: 'numeric'
   });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -188,15 +243,22 @@ function DashboardContent() {
           <div className="bg-gray-50 rounded-lg p-4 mb-4">
             <div className="flex items-center space-x-2 mb-2">
               <Zap className="w-5 h-5 text-orange-500" />
-              <span className="font-semibold text-gray-900">15-day streak!</span>
+              <span className="font-semibold text-gray-900">
+                {userProfile?.streakDays || 0}-day streak!
+              </span>
             </div>
             <p className="text-sm text-gray-600 mb-3">
               Keep analyzing content daily to maintain your streak
             </p>
             <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-              <div className="bg-orange-500 h-2 rounded-full" style={{ width: '75%' }}></div>
+              <div 
+                className="bg-orange-500 h-2 rounded-full" 
+                style={{ width: `${Math.min(((userProfile?.streakDays || 0) % 7) * 14.28, 100)}%` }}
+              ></div>
             </div>
-            <p className="text-xs text-gray-700">4/5 analyses today</p>
+            <p className="text-xs text-gray-700">
+              Best streak: {userProfile?.longestStreak || 0} days
+            </p>
           </div>
         </nav>
       </aside>
@@ -227,7 +289,7 @@ function DashboardContent() {
             <div className="flex items-center space-x-4">
               <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
                 <Users className="w-4 h-4" />
-                <span className="font-medium text-blue-600">Level 3</span>
+                <span className="font-medium text-blue-600">Level {userProfile?.level || 1}</span>
               </div>
               <Link href="/profile" className="flex items-center space-x-2 hover:bg-gray-50 px-2 py-1 rounded-lg transition-colors">
                 <div className="w-5 h-5 rounded-full overflow-hidden">
@@ -278,10 +340,13 @@ function DashboardContent() {
             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-8">
               <div className="mb-4 lg:mb-0">
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                  Welcome back, {user?.displayName || 'Priya'}!
+                  Welcome back, {userProfile?.displayName || user?.displayName || 'User'}!
                 </h1>
                 <p className="text-gray-600">
                   Ready to combat misinformation? Let's keep the truth flowing.
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Level {userProfile?.level || 1} • {userProfile?.totalPoints || 0} total points • {userProfile?.skillLevel || 'beginner'} skill level
                 </p>
               </div>
               <div className="text-left lg:text-right">
@@ -377,24 +442,37 @@ function DashboardContent() {
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">Your Statistics</h2>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-white p-6 rounded-xl border border-gray-200 text-center hover:shadow-md transition-shadow">
-                      <div className="text-3xl font-bold text-gray-900 mb-1">247</div>
+                      <div className="text-3xl font-bold text-gray-900 mb-1">
+                        {(userProfile?.analyzerStats.totalAnalyses || 0) + 
+                         (userProfile?.verifierStats.totalVerifications || 0)}
+                      </div>
                       <div className="text-sm text-gray-600 mb-1">Total Analyses</div>
-                      <div className="text-xs text-green-600 font-medium">+12 this week</div>
+                      <div className="text-xs text-green-600 font-medium">
+                        {userProfile?.trainingStats.modulesCompleted || 0} modules done
+                      </div>
                     </div>
                     <div className="bg-white p-6 rounded-xl border border-gray-200 text-center hover:shadow-md transition-shadow">
-                      <div className="text-3xl font-bold text-gray-900 mb-1">87%</div>
+                      <div className="text-3xl font-bold text-gray-900 mb-1">
+                        {Math.round(userProfile?.trainingStats.averageAccuracy || 0)}%
+                      </div>
                       <div className="text-sm text-gray-600 mb-1">Accuracy Rate</div>
-                      <div className="text-xs text-green-600 font-medium">+3% improved</div>
+                      <div className="text-xs text-green-600 font-medium">
+                        {userProfile?.trainingStats.perfectScores || 0} perfect scores
+                      </div>
                     </div>
                     <div className="bg-white p-6 rounded-xl border border-gray-200 text-center hover:shadow-md transition-shadow">
-                      <div className="text-3xl font-bold text-gray-900 mb-1">15</div>
+                      <div className="text-3xl font-bold text-gray-900 mb-1">{userProfile?.streakDays || 0}</div>
                       <div className="text-sm text-gray-600 mb-1">Day Streak</div>
-                      <div className="text-xs text-gray-600 font-medium">Personal best</div>
+                      <div className="text-xs text-gray-600 font-medium">
+                        Best: {userProfile?.longestStreak || 0} days
+                      </div>
                     </div>
                     <div className="bg-white p-6 rounded-xl border border-gray-200 text-center hover:shadow-md transition-shadow">
-                      <div className="text-3xl font-bold text-blue-600 mb-1">Level 3</div>
+                      <div className="text-3xl font-bold text-blue-600 mb-1">Level {userProfile?.level || 1}</div>
                       <div className="text-sm text-gray-600 mb-1">Current Level</div>
-                      <div className="text-xs text-gray-600 font-medium">850/1000 XP</div>
+                      <div className="text-xs text-gray-600 font-medium">
+                        {userProfile?.currentLevelPoints || 0}/{(userProfile?.currentLevelPoints || 0) + (userProfile?.pointsToNextLevel || 100)} XP
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -477,22 +555,36 @@ function DashboardContent() {
                     <div>
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600">Detection Skills</span>
-                        <span className="text-gray-700 font-medium">Level 3</span>
+                        <span className="text-gray-700 font-medium">Level {userProfile?.level || 1}</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                        <div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: '85%' }}></div>
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                          style={{ 
+                            width: `${Math.min(((userProfile?.currentLevelPoints || 0) / ((userProfile?.currentLevelPoints || 0) + (userProfile?.pointsToNextLevel || 100))) * 100, 100)}%` 
+                          }}
+                        ></div>
                       </div>
-                      <p className="text-xs text-gray-700">850/1000 XP to Level 4</p>
+                      <p className="text-xs text-gray-700">
+                        {userProfile?.currentLevelPoints || 0}/{(userProfile?.currentLevelPoints || 0) + (userProfile?.pointsToNextLevel || 100)} XP to Level {(userProfile?.level || 1) + 1}
+                      </p>
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-gray-600">Verification Speed</span>
-                        <span className="text-gray-700 font-medium">Advanced</span>
+                        <span className="text-gray-600">Skill Level</span>
+                        <span className="text-gray-700 font-medium capitalize">{userProfile?.skillLevel || 'Beginner'}</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                        <div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{ width: '92%' }}></div>
+                        <div 
+                          className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                          style={{ 
+                            width: `${(userProfile?.trainingStats.averageAccuracy || 0)}%` 
+                          }}
+                        ></div>
                       </div>
-                      <p className="text-xs text-gray-700">Average: 2.3 min per analysis</p>
+                      <p className="text-xs text-gray-700">
+                        Average accuracy: {Math.round(userProfile?.trainingStats.averageAccuracy || 0)}%
+                      </p>
                     </div>
                   </div>
                   <button className="w-full mt-6 text-blue-600 hover:text-blue-700 text-sm font-medium">
@@ -504,58 +596,53 @@ function DashboardContent() {
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Achievements</h2>
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Award className="w-4 h-4 text-yellow-600" />
+                    {userProfile?.achievements && userProfile.achievements.length > 0 ? (
+                      userProfile.achievements.slice(-3).reverse().map((achievement, index) => (
+                        <div key={index} className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-sm">{achievement.icon}</span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{achievement.name}</p>
+                            <p className="text-xs text-gray-600">{achievement.description}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        <Award className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                        <p className="text-sm">No achievements yet</p>
+                        <p className="text-xs">Complete training modules to earn achievements!</p>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">Week Warrior</p>
-                        <p className="text-xs text-gray-600">7-day analysis streak</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Eye className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">Sharp Eye</p>
-                        <p className="text-xs text-gray-600">90%+ accuracy rate</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <GraduationCap className="w-4 h-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">Module Master</p>
-                        <p className="text-xs text-gray-600">Completed 5 modules</p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 
                 {/* This Week Stats */}
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">This Week</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Points Breakdown</h2>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Analyses completed</span>
-                      <span className="font-semibold text-gray-900">23</span>
+                      <span className="text-gray-600">Total Points</span>
+                      <span className="font-semibold text-gray-900">{userProfile?.totalPoints || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Training time</span>
-                      <span className="font-semibold text-gray-900">2h 45m</span>
+                      <span className="text-gray-600">Training Points</span>
+                      <span className="font-semibold text-gray-900">{userProfile?.trainingStats.pointsEarned || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Claims verified</span>
-                      <span className="font-semibold text-gray-900">67</span>
+                      <span className="text-gray-600">Analyzer Points</span>
+                      <span className="font-semibold text-gray-900">{userProfile?.analyzerStats.pointsEarned || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Community rank</span>
-                      <span className="font-semibold text-gray-900">#142</span>
+                      <span className="text-gray-600">Verifier Points</span>
+                      <span className="font-semibold text-gray-900">{userProfile?.verifierStats.pointsEarned || 0}</span>
                     </div>
                   </div>
                 </div>
+
+                {/* Community Leaderboard */}
+                <Leaderboard limit={5} compact={true} />
               </div>
             </div>
           </div>
