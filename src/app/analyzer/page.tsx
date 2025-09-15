@@ -30,12 +30,6 @@ export default function Analyzer() {
     risk_score: number;
     summary_title: string;
     explanation_html: string;
-    sources?: Array<{
-      title: string;
-      link: string;
-      snippet: string;
-      source: string;
-    }>;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -163,7 +157,7 @@ export default function Analyzer() {
             score: result.risk_score,
             explanation: result.explanation_html?.replace(/<[^>]*>/g, '') || result.summary_title || 'Analysis completed',
             recommendations: 'Please verify this information from reliable sources before sharing.',
-            sources: Array.isArray(result.sources) ? result.sources.map((s: any) => typeof s === 'string' ? s : s.link || s.title || 'Unknown source') : []
+            sources: [] // No longer saving sources
           };
           
           await saveAnalysis(historyItem);
@@ -731,71 +725,6 @@ export default function Analyzer() {
                 </div>
               </div>
 
-              {/* Research Sources Section */}
-              {analysisResult.sources && analysisResult.sources.length > 0 && (
-                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                    Research Sources & Context
-                  </h3>
-                  <div className="bg-green-50 rounded-lg p-4 border border-green-100 mb-4">
-                    <p className="text-green-800 text-sm">
-                      <strong>Research Context:</strong> These sources were consulted during our analysis to understand 
-                      the broader context around the content's claims and to identify potential misinformation patterns. 
-                      They represent what reliable information is available on related topics.
-                    </p>
-                  </div>
-                  <div className="space-y-4">
-                    {analysisResult.sources.map((source, index) => (
-                      <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-100 hover:border-gray-200 transition-colors">
-                        <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                            <span className="text-green-600 font-semibold text-sm">{index + 1}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <h4 className="text-base font-semibold text-gray-900 line-clamp-2">
-                                <a 
-                                  href={source.link} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="hover:text-green-600 transition-colors"
-                                >
-                                  {source.title}
-                                </a>
-                              </h4>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2 line-clamp-3">
-                              {source.snippet}
-                            </p>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-700 bg-gray-200 px-2 py-1 rounded-full font-medium">
-                                {source.source}
-                              </span>
-                              <a 
-                                href={source.link} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs text-green-600 hover:text-green-800 font-medium transition-colors"
-                              >
-                                Research Source →
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-blue-800 text-xs">
-                      <strong>Note:</strong> These sources help establish context for identifying misinformation patterns. 
-                      They are not necessarily direct fact-checks of the analyzed content, but rather provide background 
-                      information that helps detect manipulation techniques and assess credibility.
-                    </p>
-                  </div>
-                </div>
-              )}
-
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
                 <button
@@ -812,13 +741,7 @@ export default function Analyzer() {
                 </button>
                 <button
                   onClick={() => {
-                    const sourcesText = analysisResult.sources && analysisResult.sources.length > 0 
-                      ? `\n\nSources:\n${analysisResult.sources.map((source, index) => 
-                          `${index + 1}. ${source.title}\n   ${source.link}\n   ${source.snippet}`
-                        ).join('\n\n')}`
-                      : '';
-                    
-                    const resultText = `Analysis Result:\nRisk Score: ${analysisResult.risk_score}/100\nSummary: ${analysisResult.summary_title}\n\nDetailed Analysis:\n${analysisResult.explanation_html.replace(/<[^>]*>/g, '')}${sourcesText}`;
+                    const resultText = `Analysis Result:\nRisk Score: ${analysisResult.risk_score}/100\nSummary: ${analysisResult.summary_title}\n\nDetailed Analysis:\n${analysisResult.explanation_html.replace(/<[^>]*>/g, '')}`;
                     navigator.clipboard.writeText(resultText);
                   }}
                   className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
