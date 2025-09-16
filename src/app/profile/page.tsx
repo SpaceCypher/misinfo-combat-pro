@@ -453,10 +453,19 @@ function ProfileContent() {
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-4">Achievements Earned</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-medium text-gray-700">Achievements Earned</h3>
+                      <Link 
+                        href="/achievements"
+                        className="text-sm text-blue-600 hover:text-blue-700 transition-colors flex items-center"
+                      >
+                        View All
+                        <Trophy className="w-4 h-4 ml-1" />
+                      </Link>
+                    </div>
                     <div className="flex flex-wrap gap-4 sm:space-x-4">
                       {userProfile?.achievements && userProfile.achievements.length > 0 ? (
-                        userProfile.achievements.map((achievement, index) => (
+                        userProfile.achievements.slice(0, 4).map((achievement, index) => (
                           <div key={index} className="text-center flex-shrink-0">
                             <div className="text-2xl mb-1">{achievement.icon}</div>
                             <div className="text-xs text-gray-600 whitespace-nowrap">{achievement.name}</div>
@@ -470,6 +479,16 @@ function ProfileContent() {
                           <Trophy className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                           <p className="text-sm">No achievements yet</p>
                           <p className="text-xs">Complete modules to earn your first achievement!</p>
+                        </div>
+                      )}
+                      {userProfile?.achievements && userProfile.achievements.length > 4 && (
+                        <div className="text-center flex-shrink-0 flex items-center justify-center">
+                          <Link 
+                            href="/achievements"
+                            className="text-xs text-blue-600 hover:text-blue-700 bg-blue-50 rounded-lg px-3 py-2 transition-colors"
+                          >
+                            +{userProfile.achievements.length - 4} more
+                          </Link>
                         </div>
                       )}
                     </div>

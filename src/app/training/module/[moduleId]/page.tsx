@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/simple-auth-context';
 import ProtectedRoute from '@/components/protected-route';
-import { TrainingDatabase, ModuleProgress as DBModuleProgress } from '@/lib/training-db';
+import { TrainingDatabase, UserProfileManager, ModuleProgress as DBModuleProgress } from '@/lib/training-db';
 import { AIContentGenerator } from '@/lib/ai-content-generator';
 
 interface TrainingScenario {
@@ -669,29 +669,63 @@ function TrainingModuleContent() {
       
       await TrainingDatabase.saveModuleProgress(user.uid, completedProgress);
       
+      // Check for achievements BEFORE completing the module (to detect first module)
+      const userProgressBefore = await TrainingDatabase.getUserProgress(user.uid);
+      const achievements = [];
+      
+      // Check if this will be the first completed module
+      if (!userProgressBefore?.completedModules?.length || userProgressBefore.completedModules.length === 0) {
+        achievements.push({
+          id: 'first-module',
+          name: 'Getting Started',
+          description: 'Complete your first training module',
+          category: 'training' as const,
+          points: 50,
+          icon: '🎯',
+          rarity: 'common' as const
+        });
+      }
+      if (accuracy === 100) {
+        achievements.push({
+          id: 'perfect-score',
+          name: 'Perfectionist',
+          description: 'Score 100% on any training module',
+          category: 'training' as const,
+          points: 100,
+          icon: '⭐',
+          rarity: 'rare' as const
+        });
+      }
+      if (totalTime < 10) {
+        achievements.push({
+          id: 'speed-demon',
+          name: 'Speed Demon',
+          description: 'Complete a module in under 10 minutes',
+          category: 'training' as const,
+          points: 75,
+          icon: '⚡',
+          rarity: 'rare' as const
+        });
+      }
+      if (moduleProgress.mistakes === 0) {
+        achievements.push({
+          id: 'flawless-victory',
+          name: 'Flawless Victory',
+          description: 'Complete a module without any mistakes',
+          category: 'training' as const,
+          points: 100,
+          icon: '🏆',
+          rarity: 'epic' as const
+        });
+      }
+      
       // Complete the module in user's overall progress
       await TrainingDatabase.completeModule(user.uid, moduleId, moduleProgress.score, totalTime);
       
-      // Check for and add new achievements
-      const userProgress = await TrainingDatabase.getUserProgress(user.uid);
-      const achievements = [];
-      
-      if (!userProgress?.completedModules?.length) {
-        achievements.push('first-module');
-      }
-      if (accuracy === 100) {
-        achievements.push('perfect-score');
-      }
-      if (totalTime < 10) {
-        achievements.push('speed-demon');
-      }
-      if (moduleProgress.mistakes === 0) {
-        achievements.push('flawless-victory');
-      }
-      
-      // Add achievements to user profile
+      // Add achievements to user profile using UserProfileManager
       for (const achievement of achievements) {
-        await TrainingDatabase.addAchievement(user.uid, achievement);
+        console.log('Awarding achievement:', achievement.name, 'to user:', user.uid);
+        await UserProfileManager.addAchievement(user.uid, achievement);
       }
       
       // Navigate to completion screen with corrected values

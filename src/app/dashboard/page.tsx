@@ -587,9 +587,12 @@ function DashboardContent() {
                       </p>
                     </div>
                   </div>
-                  <button className="w-full mt-6 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                  <Link 
+                    href="/progress"
+                    className="w-full mt-6 text-blue-600 hover:text-blue-700 text-sm font-medium block text-center transition-colors"
+                  >
                     View Detailed Progress
-                  </button>
+                  </Link>
                 </div>
 
                 {/* Recent Achievements */}

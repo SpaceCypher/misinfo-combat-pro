@@ -5,7 +5,7 @@ import LoadingSpinner from '@/components/loading-spinner';
 import Link from 'next/link';
 
 export default function TestAuth() {
-  const { user, userProfile, loading, error } = useAuth();
+  const { user, loading, error } = useAuth();
 
   if (loading) {
     return <LoadingSpinner fullScreen text="Loading authentication test..." />;
@@ -49,29 +49,6 @@ export default function TestAuth() {
                 )}
               </div>
             </div>
-
-            {userProfile && (
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">User Profile</h2>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-2">
-                    <strong>Name:</strong> {userProfile.name}
-                  </p>
-                  <p className="text-sm text-gray-600 mb-2">
-                    <strong>Skill Level:</strong> {userProfile.skillLevel}
-                  </p>
-                  <p className="text-sm text-gray-600 mb-2">
-                    <strong>Created At:</strong> {new Date(userProfile.createdAt).toLocaleDateString()}
-                  </p>
-                  <p className="text-sm text-gray-600 mb-2">
-                    <strong>Completed Modules:</strong> {userProfile.trainingProgress.completedModules.length}
-                  </p>
-                  <p className="text-sm text-gray-600 mb-2">
-                    <strong>Current Score:</strong> {userProfile.trainingProgress.currentScore}
-                  </p>
-                </div>
-              </div>
-            )}
 
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-3">Firebase Configuration</h2>
