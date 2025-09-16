@@ -81,6 +81,29 @@ function DashboardContent() {
     day: 'numeric'
   });
 
+  // Calculate real training progress
+  const calculateTrainingProgress = () => {
+    const totalModules = 9; // Total number of training modules available
+    const completedCount = userProfile?.trainingStats.modulesCompleted || 0;
+    const progressPercentage = Math.round((completedCount / totalModules) * 100);
+    
+    // Determine current module and skill level based on progress
+    const skillLevels = ['beginner', 'intermediate', 'advanced'];
+    const currentSkillIndex = Math.min(Math.floor(completedCount / 3), 2);
+    const currentSkill = skillLevels[currentSkillIndex];
+    const moduleInSkill = (completedCount % 3) + 1;
+    const maxModulesInSkill = 3;
+    
+    return {
+      percentage: progressPercentage,
+      currentModule: `${currentSkill.charAt(0).toUpperCase() + currentSkill.slice(1)} Analysis`,
+      moduleProgress: `Module ${moduleInSkill}/${maxModulesInSkill}`,
+      isComplete: completedCount >= totalModules
+    };
+  };
+
+  const trainingProgress = calculateTrainingProgress();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -398,12 +421,22 @@ function DashboardContent() {
                         <div className="mb-4 bg-gray-50 rounded-lg p-3">
                           <div className="flex justify-between text-sm mb-2">
                             <span className="text-gray-600">Current Module</span>
-                            <span className="font-medium text-green-600">75% Complete</span>
+                            <span className="font-medium text-green-600">
+                              {trainingProgress.isComplete ? 'Complete!' : `${trainingProgress.percentage}% Complete`}
+                            </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{ width: '75%' }}></div>
+                            <div 
+                              className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                              style={{ width: `${trainingProgress.percentage}%` }}
+                            ></div>
                           </div>
-                          <p className="text-xs text-gray-700 mt-2">Intermediate Analysis - Lesson 9/12</p>
+                          <p className="text-xs text-gray-700 mt-2">
+                            {trainingProgress.isComplete 
+                              ? 'All modules completed!' 
+                              : `${trainingProgress.currentModule} - ${trainingProgress.moduleProgress}`
+                            }
+                          </p>
                         </div>
                         <button className="w-full bg-gray-900 text-white py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors">
                           Continue Training
